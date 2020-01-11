@@ -1,19 +1,15 @@
 # domoticz-FritzPresence
 Presence Detector that works with your Fritz!Box. Fritz!Box are quite famous router from [AVM](https://en.avm.de/)
 
-<img src='https://github.com/belzetrigger/domoticz-FritzPresence/raw/master/resources/switch_on.PNG' width="200" alt="switch device - on">
-
-<img src='https://github.com/belzetrigger/domoticz-FritzPresence/raw/master/resources/switch_off.PNG' width="200" alt="switch device - off">
-
 ## Summary
 Instead of pinging the device this presence detector uses the host list from the router to check if device is there or not. 
-Benefit - Normally this also works if devices like smart phones save some battery. If connection between router and device got lost, this can take some time till router marks it as 'not connected'
+Benefit - Normally this also works if devices like smart phones save some battery. If connection btween router and device got lost, this can take some time till router marks it as 'not connected'
 This plugin only works with Fritz Box. 
 
 This plugin is open source.
 
 This is more or less just a wrapper around python lib [fritzconnection](https://github.com/kbr/fritzconnection) from Klaus Bremer.
-Person Images are from [DomoticzIcons](https://drive.google.com/folderview?id=0B-ZLFoCiqzMRSkFaaWdHV1Qxbm8&usp=sharing) see [Domoticz Wiki](https://www.domoticz.com/wiki/Custom_icons_for_webinterface)
+
 
 ## Prepare
 - set up your Fritz!Box
@@ -25,9 +21,10 @@ Person Images are from [DomoticzIcons](https://drive.google.com/folderview?id=0B
 ## Installation and Setup
 - a running Domoticz, tested with 4.10038
 - Python 3
-- install needed python modules:
-    - fritzconnection version 1.2.1
-    - lxml is NO longer needed!
+- install needed python moduls:
+  - lxml
+    - on Synology you might use Python 3 from the Community, it includes lxml, otherwise it's a bit tricky to build
+  - fritzconnection
 - clone project
     - go to `domoticz/plugins` directory 
     - clone the project
@@ -56,15 +53,9 @@ sys.path.append('/usr/lib/python3/dist-packages')
    - password - keep in mind, domoticz stores it plain in the database!!!!
      So really create a new user with restricted rights
    - Debug: if True, the log will be hold a lot more output.
-
-## Versions
-### till 0.8.x
-- worked with fritzconnection 0.6.x and 0.8.x
   
-### starting from 0.9.x
-- works with new fritzconnection 1.2.1 and so without need of lxml
-
 ## Bugs and ToDos
+- on raspberry domoticz and lxml can cause a "changed interpreter" error if using this device twice, better switch to newer version of this domoticz plugin.
 - On windows system changing icons for sensors did not work, so it's standard switch icon.
 - On windows system "update" the hardware breaks imported python libs. Plugin can not get data from FritzBox. But after restart services it works fine.
 

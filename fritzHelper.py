@@ -1,8 +1,8 @@
 # this is our helper class to do the work with FritzConnection
 
-#import urllib
-#import time as myTime
-#from time import mktime
+import urllib
+import time as myTime
+from time import mktime
 from datetime import datetime, timedelta
 import sys
 sys.path
@@ -16,11 +16,16 @@ try:
     import Domoticz
 except ImportError:
     import fakeDomoticz as Domoticz
+
 try:
-    from fritzconnection.lib.fritzhosts import FritzHosts
-except ModuleNotFoundError as e:
+    import fritzconnection as fc
+except SystemError as e:
     Domoticz.Error("could not load fritzconnection ...{}".format(e))
 
+try:
+    import lxml
+except SystemError as e:
+    Domoticz.Error("could not load lxml ...{}".format(e))
 
 
 class FritzHelper:
@@ -46,7 +51,7 @@ class FritzHelper:
             "name: {}".format(self.fbHost, self.macAddress, self.defaultName)
         )
 
-    def needsUpdate(self):
+    def needUpdate(self):
         '''does some of the devices need an update
 
         Returns:
@@ -65,15 +70,44 @@ class FritzHelper:
         self.resetError()
 
     def connect(self):
-        Domoticz.Debug("Try to get FritzHost Connection")
+        Domoticz.Debug("Try to get FritzfbHost Connection")
+
+        # import lxml  # does not fail if lxml has been partially installed
+        # from lxml import etree  # fails if C extension part of lxml has not been installed
+
+        # try:
+        #     from lxml import etree
+        #     Domoticz.Log("running with lxml.etree")
+        # except ImportError:
+        #     try:
+        #         # Python 2.5
+        #         import xml.etree.cElementTree as etree
+        #         Domoticz.Log("running with cElementTree on Python 2.5+")
+        #     except ImportError:
+        #         try:
+        #             # Python 2.5
+        #             import xml.etree.ElementTree as etree
+        #             Domoticz.Log("running with ElementTree on Python 2.5+")
+        #         except ImportError:
+        #             try:
+        #                 # normal cElementTree install
+        #                 import cElementTree as etree
+        #                 Domoticz.Log("running with cElementTree")
+        #             except ImportError:
+        #                 try:
+        #                     # normal ElementTree install
+        #                     import elementtree.ElementTree as etree
+        #                     Domoticz.Log("running with ElementTree")
+        #                 except ImportError:
+        #                     Domoticz.Log("Failed to import ElementTree from any known place")
 
         # import fritzconnection as fc
-        self.fcHosts = FritzHosts(
+        self.fcHosts = fc.FritzHosts(
             address=self.fbHost,
             user=self.fbUser,
             password=self.fbPassword
         )
-        #Domoticz.Debug("status: {}".format(self.fcHosts))
+        Domoticz.Debug("status: {}".format(self.fcHosts))
 
         return self.fcHosts
 

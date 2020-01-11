@@ -2,11 +2,10 @@
 #
 # Author: belze
 #
-
-
+from fritzHelper import FritzHelper
 """
 <plugin key="FritzPresence" name="Fritz!Presence Plugin"
-    author="belze" version="0.9.0" >
+    author="belze" version="0.5.0" >
     <!--
     wikilink="http://www.domoticz.com/wiki/plugins/plugin.html"
     externallink="https://www.google.com/"
@@ -47,20 +46,14 @@
     </params>
 </plugin>
 """
-#import datetime as dt
+import datetime as dt
 from datetime import datetime, timedelta
-#from os import path
+from os import path
 import sys
 try:
     import Domoticz
 except ImportError:
     import fakeDomoticz as Domoticz
-
-try:
-    from fritzHelper import FritzHelper
-except ImportError as e:
-    pass
-
 sys.path
 sys.path.append('/usr/lib/python3/dist-packages')
 sys.path.append('/volume1/@appstore/python3/lib/python3.5/site-packages')
@@ -80,7 +73,6 @@ class BasePlugin:
         self.user = None
         self.password = None
         self.pollinterval = 60 * 5
-        self.errorCounter = 0
         return
 
     def onStart(self):
@@ -117,8 +109,10 @@ class BasePlugin:
         self.macAddress = Parameters["Mode5"]
         self.defName = None
 
-        
-        
+        self.fritz = FritzHelper(self.host, self.user, self.password,
+                                 self.macAddress)
+        if self.debug is True:
+            self.fritz.dumpConfig()
 
         # check images
         checkImages("person", "person.zip")
@@ -132,22 +126,10 @@ class BasePlugin:
         updateDevice(1, 0, "No Data")
         # TODO init icon would be better
         updateImage(1, 'person')
-
-        from fritzHelper import FritzHelper
- 
-        #blz: test first init, after that get helper
-        self.fritz = FritzHelper(self.host, self.user, self.password,
-                                 self.macAddress)
-        if self.debug is True and self.fritz is not None:
-            self.fritz.dumpConfig()
-        else:
-            Domoticz.Debug('fritz is None')
-
         
         
     def onStop(self):
-        if(self.fritz is not None):
-            self.fritz.stop()
+        self.fritz.stop()
         Domoticz.Log("onStop called")
 
     def onConnect(self, Connection, Status, Description):
@@ -173,14 +155,6 @@ class BasePlugin:
         if myNow >= self.nextpoll:
             Domoticz.Debug(
                 "----------------------------------------------------")
-            
-            # TODO handle fritz is None
-            if(self.fritz is None):
-                Domoticz.Error(
-                    "Uuups. Fritz is None")
-                self.fritz = FritzHelper(self.host, self.user, self.password,
-                                 self.macAddress)
-
             self.nextpoll = myNow + timedelta(seconds=self.pollinterval)
 
             # read info it it is time
@@ -188,7 +162,6 @@ class BasePlugin:
 
             # check for error
             if(self.fritz is None or self.fritz.hasError is True):
-                self.errorCounter += 1
                 Domoticz.Error(
                     "Uuups. Something went wrong ... Shouldn't be here.")
                 t = "Error"
@@ -200,7 +173,6 @@ class BasePlugin:
                 # TODO error image
                 updateImage(1, 'person')
             else:
-                self.errorCounter = 0
                 # check if
                 if self.fritz.needUpdate is True:
                     connected = 1
