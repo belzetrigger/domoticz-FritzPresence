@@ -1,6 +1,10 @@
 # domoticz-FritzPresence
 Presence Detector that works with your Fritz!Box. Fritz!Box are quite famous router from [AVM](https://en.avm.de/)
 
+<img src='https://github.com/belzetrigger/domoticz-FritzPresence/raw/master/resources/switch_on.PNG' width="200" alt="switch device - on">
+
+<img src='https://github.com/belzetrigger/domoticz-FritzPresence/raw/master/resources/switch_off.PNG' width="200" alt="switch device - off">
+
 ## Summary
 Instead of pinging the device this presence detector uses the host list from the router to check if device is there or not. 
 Benefit - Normally this also works if devices like smart phones save some battery. If connection between router and device got lost, this can take some time till router marks it as 'not connected'
