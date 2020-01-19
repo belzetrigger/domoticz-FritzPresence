@@ -1,8 +1,5 @@
 # this is our helper class to do the work with FritzConnection
 
-#import urllib
-#import time as myTime
-#from time import mktime
 from datetime import datetime, timedelta
 import sys
 sys.path
@@ -22,7 +19,6 @@ except ModuleNotFoundError as e:
     Domoticz.Error("could not load fritzconnection ...{}".format(e))
 
 
-
 class FritzHelper:
 
     def __init__(self, fbHost: str, fbUser: str,
@@ -36,6 +32,7 @@ class FritzHelper:
         self.cooldownperiod = cooldownperiod
         self.debug = False
         self.lastUpdate = None
+        self.hasError = False
         self.nextpoll = datetime.now()
         self.reset()
 
@@ -66,14 +63,13 @@ class FritzHelper:
 
     def connect(self):
         Domoticz.Debug("Try to get FritzHost Connection")
-
         # import fritzconnection as fc
         self.fcHosts = FritzHosts(
             address=self.fbHost,
             user=self.fbUser,
             password=self.fbPassword
         )
-        #Domoticz.Debug("status: {}".format(self.fcHosts))
+        # Domoticz.Debug("status: {}".format(self.fcHosts))
 
         return self.fcHosts
 
@@ -91,6 +87,7 @@ class FritzHelper:
             self.needUpdate = True
         else:
             self.needUpdate = False
+
         # copy values to compare later
         self.deviceLastIsConnected = self.deviceIsConnected
         self.deviceLastIp = self.deviceIp
@@ -99,6 +96,7 @@ class FritzHelper:
     def readStatus(self):
         Domoticz.Debug("read status for {}".format(self.fbHost))
         try:
+            self.resetError()
             if(self.fcHosts is None):
                 self.connect()
             fh = self.fcHosts
@@ -110,20 +108,21 @@ class FritzHelper:
                 Domoticz.Debug("result: ip:{} name:{} active:{}"
                                .format(
                                    result['NewIPAddress'],
-                                   result['NewHostName'],                                  
+                                   result['NewHostName'],
                                    result['NewActive']
                                ))
-                isPresent = (result['NewActive'] ==
-                             1 or result['NewActive'] == '1')
+                isPresent = (result['NewActive'] == 1 or
+                             result['NewActive'] == '1')
                 name = result['NewHostName']
                 ip = result['NewIPAddress']
-                if(isPresent is False and self.lastUpdate is not None and self.deviceLastIsConnected is True):
+                if (isPresent is False and self.lastUpdate is not None and
+                        self.deviceLastIsConnected is True):
                     Domoticz.Debug("device turned off - check cool down time")
                     n = datetime.now()
                     Domoticz.Debug("now {}".format(n))
                     Domoticz.Debug("last {}".format(self.lastUpdate))
-                    
-                    delta = (n-self.lastUpdate).total_seconds()
+
+                    delta = (n - self.lastUpdate).total_seconds()
                     Domoticz.Debug("delta: {}".format(delta))
                     if(delta > float(self.cooldownperiod)):
                         Domoticz.Debug("It's time to tell domoticz,"

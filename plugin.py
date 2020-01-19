@@ -6,14 +6,14 @@
 
 """
 <plugin key="FritzPresence" name="Fritz!Presence Plugin"
-    author="belze" version="0.9.0" >
+    author="belze" version="0.6.0" >
     <!--
     wikilink="http://www.domoticz.com/wiki/plugins/plugin.html"
     externallink="https://www.google.com/"
     //-->
     <description>
         <h2>Fritz!Presence</h2><br/>
-        Add presence detection with your FritzBox to Domotoicz
+        Add presence detection with your FritzBox to Domoticz
         <h3>Features</h3>
         <ul style="list-style-type:square">
             <li></li>
@@ -26,8 +26,8 @@
         Configuration options...
     </description>
     <params>
-        <param field="Mode1" label="Hostname or IP" width="200px" required="true"
-        default="fritz.box"/>
+        <param field="Mode1" label="Hostname or IP" width="200px"
+        required="true" default="fritz.box"/>
         <param field="Mode2" label="User" width="200px" required="false"
         />
         <param field="Mode3" label="Password" width="200px" required="false"
@@ -37,7 +37,6 @@
         required="true" default="5"/>
         <param field="Mode5" label="MACAddress" width="150px"/>
         <param field="Mode7" label="cooldownphase" width="75px"/>
-        
         <param field="Mode6" label="Debug" width="75px">
             <options>
                 <option label="True" value="Debug"/>
@@ -47,9 +46,9 @@
     </params>
 </plugin>
 """
-#import datetime as dt
+# import datetime as dt
 from datetime import datetime, timedelta
-#from os import path
+# from os import path
 import sys
 try:
     import Domoticz
@@ -117,14 +116,11 @@ class BasePlugin:
         self.macAddress = Parameters["Mode5"]
         self.defName = None
 
-        
-        
-
         # check images
         checkImages("person", "person.zip")
 
         # use hard ware name and mac as dummy name
-        devName ="{}_{}".format(Parameters['Name'], self.macAddress)
+        devName = "{}_{}".format(Parameters['Name'], self.macAddress)
         # Check if devices need to be created
         createDevices(devName)
 
@@ -134,8 +130,8 @@ class BasePlugin:
         updateImage(1, 'person')
 
         from fritzHelper import FritzHelper
- 
-        #blz: test first init, after that get helper
+
+        # blz: test first init, after that get helper
         self.fritz = FritzHelper(self.host, self.user, self.password,
                                  self.macAddress)
         if self.debug is True and self.fritz is not None:
@@ -143,8 +139,6 @@ class BasePlugin:
         else:
             Domoticz.Debug('fritz is None')
 
-        
-        
     def onStop(self):
         if(self.fritz is not None):
             self.fritz.stop()
@@ -173,13 +167,13 @@ class BasePlugin:
         if myNow >= self.nextpoll:
             Domoticz.Debug(
                 "----------------------------------------------------")
-            
+
             # TODO handle fritz is None
             if(self.fritz is None):
                 Domoticz.Error(
                     "Uuups. Fritz is None")
                 self.fritz = FritzHelper(self.host, self.user, self.password,
-                                 self.macAddress)
+                                         self.macAddress)
 
             self.nextpoll = myNow + timedelta(seconds=self.pollinterval)
 
@@ -199,6 +193,7 @@ class BasePlugin:
                 updateDevice(1, 0, t, 'Fritz!Box - Error')
                 # TODO error image
                 updateImage(1, 'person')
+                self.nextpoll = myNow
             else:
                 self.errorCounter = 0
                 # check if
@@ -207,10 +202,10 @@ class BasePlugin:
                     if(self.fritz.deviceIsConnected is False):
                         connected = 0
                     # device 1 == switch
-                    updateDevice(1, connected, "", Parameters['Name'], 
+                    updateDevice(1, connected, "", Parameters['Name'],
                                  self.fritz.getDeviceName())
                     updateImage(1, 'person')
-                    
+
             Domoticz.Debug(
                 "----------------------------------------------------")
 
@@ -266,7 +261,7 @@ def DumpConfigToLog():
     for x in Parameters:
         if Parameters[x] != "":
             # skip passwword
-            if( "Mode3"  in x ):
+            if("Mode3" in x):
                 Domoticz.Debug("'" + x + "':'....'")
             else:
                 Domoticz.Debug("'" + x + "':'" + str(Parameters[x]) + "'")
@@ -295,7 +290,7 @@ def createDevices(devName: str):
     # create the mandatory child devices if not yet exist
     if 1 not in Devices:
         Domoticz.Device(Name=devName, Unit=1, TypeName="Switch",
-                        Options={"Custom": ("1;Foo")},  Used=1).Create()
+                        Options={"Custom": ("1;Foo")}, Used=1).Create()
         updateImage(1, 'person')
         Domoticz.Log("Devices[1] created.")
 
@@ -317,7 +312,6 @@ def createDevices(devName: str):
 
 
 def updateDevice(Unit, alarmLevel, alarmData, name='', dscr='', alwaysUpdate=False):
-   
 
     # Make sure that the Domoticz device still exists (they can be deleted) before updating it
     if Unit in Devices:
@@ -325,7 +319,8 @@ def updateDevice(Unit, alarmLevel, alarmData, name='', dscr='', alwaysUpdate=Fal
             if(len(name) <= 0):
                 Devices[Unit].Update(int(alarmLevel), alarmData)
             else:
-                Devices[Unit].Update(int(alarmLevel), alarmData, Name=name, Description=dscr)
+                Devices[Unit].Update(int(alarmLevel), alarmData, Name=name,
+                                     Description=dscr)
             Domoticz.Log("BLZ: Updated to: {} value: {}".format(
                 alarmData, alarmLevel))
         else:
@@ -348,8 +343,8 @@ def updateImage(Unit, picture):
                                  Image=Images[picture].ID)
             # Devices[Unit].Update(int(alarmLevel), alarmData, Name=name)
     else:
-        Domoticz.Error("Image: Unit or Picture {} unknown".format(picture) )
+        Domoticz.Error("Image: Unit or Picture {} unknown".format(picture))
         Domoticz.Error("Number of icons loaded = " + str(len(Images)))
         for image in Images:
-            Domoticz.Error("Image: {} id: {} name: {}".format(image, Images[image].ID,  Images[image].Name))
+            Domoticz.Error("Image: {} id: {} name: {}".format(image, Images[image].ID, Images[image].Name))
     return

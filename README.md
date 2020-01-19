@@ -2,6 +2,9 @@
 
 # domoticz-FritzPresence
 Presence Detector that works with your Fritz!Box. Fritz!Box are quite famous router from [AVM](https://en.avm.de/)
+<!---
+[![GitHub license](https://img.shields.io/github/license/belzetrigger/domoticz-FritzBox.svg)](https://github.com/belzetrigger/domoticz-FritzPresence/blob/master/LICENSE)
+-->
 
 [![PyPI pyversions](https://img.shields.io/badge/python-3.6%20|%203.7%20|%203.8-blue.svg)]() 
 [![Plugin version](https://img.shields.io/badge/version-0.6.0-red.svg)](https://github.com/belzetrigger/domoticz-FritzPresence/branches/)
@@ -65,10 +68,10 @@ sys.path.append('/usr/lib/python3/dist-packages')
    - Debug: if True, the log will be hold a lot more output.
 
 ## Versions
-Version |  Note
---------|-------
-<= 0.5 | worked with fritzconnection 0.6.x and 0.8.x, needs lxml
-\>= 0.6 | works with new fritzconnection 1.2.1 and so without need of lxml but Python >= 3.6
+| Version | Note                                                                               |
+| ------- | ---------------------------------------------------------------------------------- |
+| <= 0.5  | worked with fritzconnection 0.6.x and 0.8.x, needs lxml                            |
+| \>= 0.6 | works with new fritzconnection 1.2.1 and so without need of lxml but Python >= 3.6 |
 
 
 
