@@ -6,7 +6,7 @@
 
 """
 <plugin key="FritzPresence" name="Fritz!Presence Plugin"
-    author="belze" version="0.6.0" >
+    author="belze" version="0.6.2" >
     <!--
     wikilink="http://www.domoticz.com/wiki/plugins/plugin.html"
     externallink="https://www.google.com/"
@@ -16,14 +16,22 @@
         Add presence detection with your FritzBox to Domoticz
         <h3>Features</h3>
         <ul style="list-style-type:square">
-            <li></li>
+            <li>uses router information to show state of a device.</li>
+            <li>works better than ping, if mobile phone use some energy saving options</li>
+            <li>supports multiple devices - just add the MAC Addresses separeted by ';' </li>
+            <li>on error device will be shown as absence (turned off) and show 'Error' </li>
+            <li>using the MAC as internal DeviceID, so if order changes, there is a chance to pick the right one</li>
+            <li>(Future)cool down phase. Handle short absence of device not as absence.  Maybe Wifi connection might be interrupted on restart phone.  </li>
         </ul>
         <h3>Devices</h3>
+        for each MAC address there will be one device generated
         <ul style="list-style-type:square">
             <li>switch - shows if device is there or not</li>
         </ul>
         <h3>Configuration</h3>
-        Configuration options...
+        Use a list of MAC Addresses seperated by ';' if you want to add more
+        devices. If you do so, please use also the name field in the same way.
+
     </description>
     <params>
         <param field="Mode1" label="Hostname or IP" width="200px"
@@ -35,7 +43,7 @@
         />
         <param field="Mode4" label="Update every x minutes" width="200px"
         required="true" default="5"/>
-        <param field="Mode5" label="MACAddress" width="150px"/>
+        <param field="Mode5" label="MACAddresses" width="350px"/>
         <param field="Mode7" label="cooldownphase" width="75px"/>
         <param field="Mode6" label="Debug" width="75px">
             <options>
@@ -80,6 +88,9 @@ class BasePlugin:
         self.password = None
         self.pollinterval = 60 * 5
         self.errorCounter = 0
+        self.macList: List[str] = []
+        self.nameList: List[str] = []
+
         return
 
     def onStart(self):
@@ -113,27 +124,41 @@ class BasePlugin:
         self.host = Parameters["Mode1"]
         self.user = Parameters["Mode2"]
         self.password = Parameters["Mode3"]
-        self.macAddress = Parameters["Mode5"]
+        # self.macAddress = Parameters["Mode5"]
+        self.macList = Parameters["Mode5"].split(';')
+        # just for security
+        if(Parameters['Name'] is not None):
+            self.nameList = Parameters['Name'].split(';')
+            # just for quality
+            if(len(self.nameList) != len(self.macList)):
+                Domoticz.Error("Amount of Names does not fit defined addresses. Use now MAC Address as names.")
+                self.nameList = Parameters["Mode5"].split(';')
+        else:
+            Domoticz.Error("No Names defined in configuration. Using mac addresses first.")
+            self.nameList = Parameters["Mode5"].split(';')
         self.defName = None
 
         # check images
         checkImages("person", "person.zip")
 
         # use hard ware name and mac as dummy name
-        devName = "{}_{}".format(Parameters['Name'], self.macAddress)
-        # Check if devices need to be created
-        createDevices(devName)
-
-        # init with empty data
-        updateDevice(1, 0, "No Data")
-        # TODO init icon would be better
-        updateImage(1, 'person')
+        # TODO namen auch noch parsen
+        devNameList: List[str] = []
+        for i in range(len(self.macList)):
+            devName = "{}_{}".format(Parameters['Name'], self.macList[i])
+            # devNameList.append(self.macList[i])
+            # Check if devices need to be created
+            createDevices(i + 1, devName, self.macList[i])
+            # init with empty data
+            updateDeviceByDevId(self.macList[i], 0, "No Data")
+            # TODO init icon would be better
+            updateImageByDevId(self.macList[i], 'person')
 
         from fritzHelper import FritzHelper
 
         # blz: test first init, after that get helper
         self.fritz = FritzHelper(self.host, self.user, self.password,
-                                 self.macAddress)
+                                 self.macList)
         if self.debug is True and self.fritz is not None:
             self.fritz.dumpConfig()
         else:
@@ -173,7 +198,7 @@ class BasePlugin:
                 Domoticz.Error(
                     "Uuups. Fritz is None")
                 self.fritz = FritzHelper(self.host, self.user, self.password,
-                                         self.macAddress)
+                                         self.macList)
 
             self.nextpoll = myNow + timedelta(seconds=self.pollinterval)
 
@@ -190,21 +215,36 @@ class BasePlugin:
                     Domoticz.Debug(self.fritz.getSummary())
                 if(self.fritz is not None and self.fritz.hasError is True):
                     t = "{}:{}".format(t, self.fritz.errorMsg)
-                updateDevice(1, 0, t, 'Fritz!Box - Error')
-                # TODO error image
-                updateImage(1, 'person')
+
+                for i in range(len(self.macList)):
+                    updateDeviceByDevId(self.macList[i], 0, t, 'Fritz!Box - Error')
+                    # TODO error image
+                    updateImageByDevId(self.macList[i], 'person')
+
                 self.nextpoll = myNow
             else:
                 self.errorCounter = 0
                 # check if
-                if self.fritz.needUpdate is True:
-                    connected = 1
-                    if(self.fritz.deviceIsConnected is False):
-                        connected = 0
-                    # device 1 == switch
-                    updateDevice(1, connected, "", Parameters['Name'],
-                                 self.fritz.getDeviceName())
-                    updateImage(1, 'person')
+                for i in range(len(self.macList)):
+                    if self.fritz.needsUpdate(i) is True:
+                        connected = 1
+                        if(self.fritz.isDeviceConnected(i) is False):
+                            connected = 0
+                        # device 1 == switch
+                        # TODO what we should use as name?
+                        # name from config?
+                        # name as they defined?
+                        # No1 name from fritz box
+                        # updateDevice(i + 1, connected, "", self.getDeviceName(i),
+                        #             self.fritz.getDeviceName(i))
+                        # No2 name from domoticz config for hardware
+                        # updateDevice(i + 1, connected, "", self.nameList[i],
+                        #             self.fritz.getDeviceName(i))
+                        # No3 just use the one on device area in domoticz
+                        updateDeviceByDevId(self.macList[i], connected, "", "",
+                                     self.fritz.getDeviceName(i))
+
+                        updateImageByDevId(self.macList[i], 'person')
 
             Domoticz.Debug(
                 "----------------------------------------------------")
@@ -283,16 +323,41 @@ def checkImages(sName: str, sZip: str):
         Domoticz.Image(sZip).Create()
 
 
-def createDevices(devName: str):
+def getUnit4DeviceID(devId: str):
+    for dev in Devices:
+        if (Devices[dev].DeviceID == devId):
+            return dev
+
+
+def getUnit4Name(name: str):
+    for dev in Devices:
+        if (Devices[dev].Name == name):
+            return dev
+
+
+def createDevices(unit: int, devName: str, devId: str):
     '''
     this creates the switch
     '''
-    # create the mandatory child devices if not yet exist
-    if 1 not in Devices:
-        Domoticz.Device(Name=devName, Unit=1, TypeName="Switch",
+    # create the mandatory devices if not yet exist
+    if devId is not None:
+        idx = getUnit4DeviceID(devId)
+        if(idx is not None):
+            Domoticz.Debug("BLZ: Looks like device with id: {} was created under unit: {}".format(devId,
+                                                                                                  idx))
+            if(idx != unit):
+                Domoticz.Log("BLZ: Device with id: {} was created under unit: {} and not {}".format(devId,
+                                                                                                    idx, unit))
+            return idx
+    Domoticz.Debug("Device does not exist - create it ...")
+    if unit not in Devices:
+        Domoticz.Device(Name=devName, Unit=unit, TypeName="Switch",
+                        DeviceID=devId,
                         Options={"Custom": ("1;Foo")}, Used=1).Create()
-        updateImage(1, 'person')
-        Domoticz.Log("Devices[1] created.")
+        updateImageByUnit(unit, 'person')
+        Domoticz.Log("BLZ: Device {} created".format(
+            unit))
+    return unit
 
 # Update Device into database
 
@@ -310,14 +375,17 @@ def createDevices(devName: str):
 #                 "Update " + Devices[Unit].Name + ": " + str(nValue) + " - '" + str(sValue) + "'")
     # return
 
+def updateDeviceByDevId(devId: str, alarmLevel, alarmData, name: str = '', dscr: str = '', alwaysUpdate=False):
+    unit = getUnit4DeviceID(devId)
+    updateDeviceByUnit(unit, alarmLevel, alarmData, name, dscr, alwaysUpdate)
 
-def updateDevice(Unit, alarmLevel, alarmData, name='', dscr='', alwaysUpdate=False):
 
+def updateDeviceByUnit(Unit: int, alarmLevel, alarmData, name: str = '', dscr: str = '', alwaysUpdate=False):
     # Make sure that the Domoticz device still exists (they can be deleted) before updating it
     if Unit in Devices:
         if (alarmData != Devices[Unit].sValue) or (int(alarmLevel) != Devices[Unit].nValue or alwaysUpdate is True):
             if(len(name) <= 0):
-                Devices[Unit].Update(int(alarmLevel), alarmData)
+                Devices[Unit].Update(int(alarmLevel), alarmData, Description=dscr)
             else:
                 Devices[Unit].Update(int(alarmLevel), alarmData, Name=name,
                                      Description=dscr)
@@ -330,8 +398,13 @@ def updateDevice(Unit, alarmLevel, alarmData, name='', dscr='', alwaysUpdate=Fal
             "Devices[{}] is unknown. So we cannot update it.".format(Unit))
 
 
+def updateImageByDevId(devId: str, picture):
+    unit = getUnit4DeviceID(devId)
+    updateImageByUnit(unit, picture)
+
+
 # Synchronise images to match parameter in hardware page
-def updateImage(Unit, picture):
+def updateImageByUnit(Unit: int, picture):
     Domoticz.Debug("Image: Update Unit: {} Image: {}".format(Unit, picture))
     if Unit in Devices and picture in Images:
         Domoticz.Debug("Image: Name:{}\tId:{}".format(
