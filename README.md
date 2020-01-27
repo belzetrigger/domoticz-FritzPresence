@@ -18,9 +18,9 @@ This plugin only works with Fritz Box. </i>
 
 User is shown like this in domoticz. 
 
-<img src='https://github.com/belzetrigger/domoticz-FritzPresence/raw/master/resources/switch_on.PNG' width="200" alt="switch device - on">
+<img src='https://github.com/belzetrigger/domoticz-FritzPresence/raw/master/resources/switch_on.PNG' width="300" alt="switch device - on">
 
-<img src='https://github.com/belzetrigger/domoticz-FritzPresence/raw/master/resources/switch_off.PNG' width="200" alt="switch device - off">
+<img src='https://github.com/belzetrigger/domoticz-FritzPresence/raw/master/resources/switch_off.PNG' width="300" alt="switch device - off">
 
 This plugin is open source.
 
