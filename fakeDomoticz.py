@@ -10,6 +10,12 @@
 #   Very simple module to make local testing easier
 #   It "emulates" Domoticz.Log() and Domoticz.Debug()
 #
+from typing import Any, Dict
+
+
+Parameters: Dict[str, Any] = {}
+Images: Dict[str, Any] = {}
+Devices: Dict[str, Any] = {}
 
 
 def Log(s):

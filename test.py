@@ -4,25 +4,19 @@
 from fritzHelper import FritzHelper
 
 
-def runTest(fh: FritzHelper):
+def runTest(fh: FritzHelper, mac: str):
     fh.dumpConfig()
     fh.readStatus()
     fh.dumpStatus()
-    print("need Update: {}".format(fh.needUpdate))
+    print("need Update: {}".format(fh.needsUpdate))
     fh.readStatus()
-    print("need Update: {}".format(fh.needUpdate))
+    print("need Update: {}".format(fh.needsUpdate))
     print("summary: {}".format(fh.getSummary()))
     print("summary short: {}".format(fh.getShortSummary()))
     print("summary short: {}".format(fh.getShortSummary("; ")))
 
-    print("name:\t{}".format(fh.getDeviceName()))
-    print("nameMB:\t{}".format(fh.getDeviceNameWithMB()))
-    print("nameEIP:\t{}".format(fh.getDeviceNameWithEIP()))
+    print("name:\t{}".format(fh.getDeviceName(mac)))
 
-    # print("date: {} level:{} txt: {} name: {}".format(y.getNearestDate(),
-    #
-    #                  y.getAlarmLevel(), y.getAlarmText(),
-    #              y.getDeviceName()))
-    #
-fh = FritzHelper("fritz.box", "", "")
-runTest(fh)
+
+fh = FritzHelper("fritz.box", "", "", "", "")
+runTest(fh, mac)
