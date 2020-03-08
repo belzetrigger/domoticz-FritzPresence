@@ -217,9 +217,9 @@ class BasePlugin:
             else:
                 devName = "{}_{}".format(Parameters['Name'], self.macList[i])
             # Check if devices need to be created
-            createDevice(i + UNIT_DEV_START_IDX, devName, self.macList[i])
+            createDevice(unit=i + UNIT_DEV_START_IDX, devName=devName, devId=self.macList[i])
             # init with empty data
-            updateDeviceByDevId(self.macList[i], 0, "No Data")
+            updateDeviceByDevId(devId=self.macList[i], alarmLevel=0, alarmData="No Data jet", name=devName)
             # TODO init icon would be better
             updateImageByDevId(self.macList[i], ICON_PERSON)
 
@@ -250,8 +250,8 @@ class BasePlugin:
         Domoticz.Log("onMessage called")
 
     def onCommand(self, Unit, Command, Level, Hue):
-        Domoticz.Log("onCommand called for Unit " +
-                     str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level))
+        Domoticz.Log("onCommand called for Unit "
+                     + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level))
         Command = Command.strip()
         action, sep, params = Command.partition(' ')
         action = action.capitalize()
@@ -333,12 +333,11 @@ class BasePlugin:
                 # tell our helper class
                 self.fritz.addDevice(host)
                 # update
-                updateDeviceByDevId(mac, status, "", "",
-                                    name)
+                updateDeviceByDevId(devId=mac, alarmLevel=status, alarmData="", name=name, alwaysUpdate=True)
 
     def onNotification(self, Name, Subject, Text, Status, Priority, Sound, ImageFile):
-        Domoticz.Log("Notification: " + Name + "," +
-                     Subject + "," + Text + "," + Status + "," + str(Priority) + "," + Sound + "," + ImageFile)
+        Domoticz.Log("Notification: " + Name + ","
+                     + Subject + "," + Text + "," + Status + "," + str(Priority) + "," + Sound + "," + ImageFile)
 
     def onDisconnect(self, Connection):
         Domoticz.Log("onDisconnect called")
@@ -575,6 +574,8 @@ def createDevice(unit: int, devName: str, devId: str, image: str = ICON_PERSON):
         Domoticz.Device(Name=devName, Unit=unit, TypeName="Switch",
                         DeviceID=devId,
                         Options={"Custom": ("1;Foo")}, Used=1).Create()
+        # work around, default behavior is using Hardwarename+' '+devname
+        # Devices[unit].Update(Name=devName)
         updateImageByUnit(unit, image)
         Domoticz.Log("BLZ: Device {} created".format(
             unit))
@@ -659,8 +660,8 @@ def updateImageByUnit(Unit: int, picture):
         Domoticz.Debug("Image: Name:{}\tId:{}".format(
             picture, Images[picture].ID))
         if Devices[Unit].Image != Images[picture].ID:
-            Domoticz.Log("Image: Device Image update: 'Fritz!Box', Currently " +
-                         str(Devices[Unit].Image) + ", should be " + str(Images[picture].ID))
+            Domoticz.Log("Image: Device Image update: 'Fritz!Box', Currently "
+                         + str(Devices[Unit].Image) + ", should be " + str(Images[picture].ID))
             Devices[Unit].Update(nValue=Devices[Unit].nValue, sValue=str(Devices[Unit].sValue),
                                  Image=Images[picture].ID)
             # Devices[Unit].Update(int(alarmLevel), alarmData, Name=name)
