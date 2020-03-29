@@ -49,6 +49,7 @@
         <h3>Configuration</h3>
         Use a list of MAC Addresses seperated by ';' if you want to add more
         devices. If you do so, please use also the name field in the same way.
+        For bare use with admin switch, leave it blank.
 
     </description>
     <params>
@@ -180,17 +181,20 @@ class BasePlugin:
         self.user = Parameters["Mode2"]
         self.password = Parameters["Mode3"]
         # self.macAddress = Parameters["Mode5"]
-        self.macList = Parameters["Mode5"].split(';')
-        # just for security
-        if(Parameters['Name'] is not None):
-            self.nameList = Parameters['Name'].split(';')
-            # just for quality
-            if(len(self.nameList) != len(self.macList)):
-                Domoticz.Error("Amount of Names does not fit defined addresses. Use now MAC Address as names.")
-                self.nameList = Parameters["Mode5"].split(';')
+        if(not Parameters["Mode5"]):
+            Domoticz.Log("Mac Addresses are empty. Use admin switch to add.")
         else:
-            Domoticz.Error("No Names defined in configuration. Using mac addresses first.")
-            self.nameList = Parameters["Mode5"].split(';')
+            self.macList = Parameters["Mode5"].split(';')
+            # just for security
+            if(Parameters['Name'] is not None):
+                self.nameList = Parameters['Name'].split(';')
+                # just for quality
+                if(len(self.nameList) != len(self.macList)):
+                    Domoticz.Error("Amount of Names does not fit defined addresses. Use now MAC Address as names.")
+                    self.nameList = Parameters["Mode5"].split(';')
+            else:
+                Domoticz.Error("No Names defined in configuration. Using mac addresses first.")
+                self.nameList = Parameters["Mode5"].split(';')
         self.defName = None
 
         # check images
@@ -250,8 +254,8 @@ class BasePlugin:
         Domoticz.Log("onMessage called")
 
     def onCommand(self, Unit, Command, Level, Hue):
-        Domoticz.Log("onCommand called for Unit "
-                     + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level))
+        Domoticz.Log("onCommand called for Unit " +
+                     str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level))
         Command = Command.strip()
         action, sep, params = Command.partition(' ')
         action = action.capitalize()
@@ -336,8 +340,8 @@ class BasePlugin:
                 updateDeviceByDevId(devId=mac, alarmLevel=status, alarmData="", name=name, alwaysUpdate=True)
 
     def onNotification(self, Name, Subject, Text, Status, Priority, Sound, ImageFile):
-        Domoticz.Log("Notification: " + Name + ","
-                     + Subject + "," + Text + "," + Status + "," + str(Priority) + "," + Sound + "," + ImageFile)
+        Domoticz.Log("Notification: " + Name + "," +
+                     Subject + "," + Text + "," + Status + "," + str(Priority) + "," + Sound + "," + ImageFile)
 
     def onDisconnect(self, Connection):
         Domoticz.Log("onDisconnect called")
@@ -660,8 +664,8 @@ def updateImageByUnit(Unit: int, picture):
         Domoticz.Debug("Image: Name:{}\tId:{}".format(
             picture, Images[picture].ID))
         if Devices[Unit].Image != Images[picture].ID:
-            Domoticz.Log("Image: Device Image update: 'Fritz!Box', Currently "
-                         + str(Devices[Unit].Image) + ", should be " + str(Images[picture].ID))
+            Domoticz.Log("Image: Device Image update: 'Fritz!Box', Currently " +
+                         str(Devices[Unit].Image) + ", should be " + str(Images[picture].ID))
             Devices[Unit].Update(nValue=Devices[Unit].nValue, sValue=str(Devices[Unit].sValue),
                                  Image=Images[picture].ID)
             # Devices[Unit].Update(int(alarmLevel), alarmData, Name=name)

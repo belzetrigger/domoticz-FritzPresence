@@ -94,7 +94,7 @@ this functions are supported
 * add active devices
 * add all known devices
 
-Keep in mind, normally a device must have been recent active to have a connection type. Also VPN devices a special, as they might not have a MAC-Address.
+Keep in mind, normally a device must have been recent active to have a connection type. Also VPN devices are special, as they might not have a MAC-Address.
 
 ### Wake on LAN
 To send magic packet just click on an `off` device to switch it on. WOL works only for ethernet. And the hardware must support it! For example the network adapter on Raspberry Pi does not support it.

@@ -141,8 +141,8 @@ class PresDevice:
 
         except (Exception) as e:
             self.setMyError(e)
-            Domoticz.Error("Error on readStatus: msg '{}'; hasError:{}"
-                           .format(e, str(self.hasError)))
+            Domoticz.Error("Error on readStatus for Device: {} msg: '{}'; hasError:{}"
+                           .format(self.deviceName, e, str(self.hasError)))
 
     def getShortSummary(self, seperator: str = "\t"):
         s = '{} is on: {}'.format(self.defaultName, self.deviceIsConnected)
