@@ -624,14 +624,14 @@ def updateDeviceByUnit(Unit: int, alarmLevel, alarmData, name: str = '', dscr: s
     # Make sure that the Domoticz device still exists (they can be deleted) before updating it
     if Unit in Devices:
         if (alarmData != Devices[Unit].sValue) or (int(alarmLevel) != Devices[Unit].nValue or alwaysUpdate is True):
-            if(len(name) <= 0):
+            if(not name):
                 Devices[Unit].Update(int(alarmLevel), alarmData, Description=dscr)
             else:
                 Devices[Unit].Update(int(alarmLevel), alarmData, Name=name,
                                      Description=dscr)
 
-            Domoticz.Log("BLZ: Updated to: {} value: {}".format(
-                alarmData, alarmLevel))
+            Domoticz.Log("Update #{} Name: {} nV: {} sV: {}  ".format(
+                Unit, Devices[Unit].Name, str(alarmLevel), str(alarmData)))
         else:
             Domoticz.Log("BLZ: Remains Unchanged")
     else:
