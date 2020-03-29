@@ -93,6 +93,7 @@ sys.path.append('/volume1/@appstore/python3/lib/python3.5/site-packages')
 # sys.path.append('/volume1/@appstore/py3k/usr/local/lib/python3.5/site-packages')
 sys.path.append('C:\\Program Files (x86)\\Python37-32\\Lib\\site-packages')
 
+PARAM_PASS: str = 'Mode3'  # parameter that holds password
 
 # icons
 ICON_ADMIN = "FritzPresenceAdmin"   # icon used for fritz box switch and alert
@@ -485,11 +486,10 @@ def onHeartbeat():
 def DumpConfigToLog():
     for x in Parameters:
         if Parameters[x] != "":
-            # skip passwword
-            if("Mode3" in x):
-                Domoticz.Debug("'" + x + "':'....'")
-            else:
-                Domoticz.Debug("'" + x + "':'" + str(Parameters[x]) + "'")
+            value: str = str(Parameters[x])
+            if(x == PARAM_PASS):
+                value = 'xxx'
+            Domoticz.Debug("{}:\t{}".format(x, value))
     Domoticz.Debug("Device count: " + str(len(Devices)))
     for x in Devices:
         Domoticz.Debug("Device:           " + str(x) + " - " + str(Devices[x]))
