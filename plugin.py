@@ -13,7 +13,8 @@
     //-->
     <description>
         <h2>Fritz!Presence</h2><br/>
-        Does two things. Mainly adds your IT devices known by your Fritz!Box to domoticz and shows the current statusself.
+        Does two things. Mainly adds your IT devices known by your Fritz!Box to 
+        domoticz and shows the current statusself.
         So you can determine the presence of people if for example mobile phone is connected-
         <h3>Features</h3>
         <ul style="list-style-type:square">
@@ -38,7 +39,9 @@
            </li>
            <li>based on names, this plugin tries to add differant images</li>
            <li>WOL: send magic packets to your ethernet device</li>
-            <li>(Future)cool down phase. Handle short absence of device not as absence.  Maybe WiFi connection might be interrupted on restart phone.  </li>
+            <li>(Future)cool down phase. Handle short absence of device not as absence.  
+            Maybe WiFi connection might be interrupted on restart phone.  
+            </li>
         </ul>
         <h3>Devices</h3>
         for each MAC address there will be one device generated
@@ -97,6 +100,7 @@ PARAM_PASS: str = 'Mode3'  # parameter that holds password
 
 # icons
 ICON_ADMIN = "FritzPresenceAdmin"   # icon used for fritz box switch and alert
+ICON_BOX = "FritzPresenceBox"
 ICON_IOT = "FritzPresenceIoT"
 ICON_IOTCLOUD = "FritzPresenceIoTCloud"
 ICON_NOTEBOOK = "FritzPresenceNotebook"
@@ -109,12 +113,13 @@ ICON_TV = "FritzPresenceTV"
 
 
 # names to fit icons
+ICON_BOX_NAME_PREFIXES = ["FRITZ", "BOX", "FRITZ.BOX"]
+ICON_IOT_NAME_PREFIXES = ["ESP-", "IOT", "TASMOTA"]
 ICON_NOTEBOOK_PREFIXES = ["PC-", "NB-", "DESKTOP"]
+ICON_PHONE_PREFIXES = ["HUAWEI", "NOKIA", "NEXUS", "PHONE", "ANDROID"]
 ICON_PI_PREFIXES = ["RASPBERRY", "PI"]
 ICON_TAB_PREFIXES = ["TAB", "PAD"]
 ICON_TV_PREFIXES = ["TV"]
-ICON_PHONE_PREFIXES = ["HUAWEI", "NOKIA", "NEXUS", "PHONE", "ANDROID"]
-IOT_NAME_PREFIXES = ["ESP-", "IOT", "TASMOTA"]
 
 
 UNIT_CMD_SWITCH_IDX = 1
@@ -200,6 +205,8 @@ class BasePlugin:
 
         # check images
         checkImages(ICON_ADMIN, ICON_ADMIN + ".zip")
+        checkImages(ICON_BOX, ICON_BOX + ".zip")
+
         checkImages(ICON_IOT, ICON_IOT + ".zip")
         checkImages(ICON_IOTCLOUD, ICON_IOTCLOUD + ".zip")
 
@@ -315,7 +322,8 @@ class BasePlugin:
         """[summary]
 
         Arguments:
-            hosts {dict} -- list of hosts should came from fritzhelper or fritzconnection we need at least mac, status, name
+            hosts {dict} -- list of hosts should came from fritzhelper or fritzconnection we 
+                            need at least mac, status, name
         """
         for host in hosts:
             mac = host['mac']
@@ -415,23 +423,19 @@ class BasePlugin:
         img = ICON_PERSON
 
         if any(x in name.upper() for x in ICON_TV_PREFIXES):
-            # if ("TV" in name.upper()):
             img = ICON_TV
         elif any(x in name.upper() for x in ICON_TAB_PREFIXES):
-            # elif ("TAB" in name.upper() or "PAD" in name.upper()):
             img = ICON_TABLET
         elif any(x in name.upper() for x in ICON_PHONE_PREFIXES):
-            # elif ("HUAWEI" in name.upper() or "NOKIA" in name.upper() or "NEXUS" in name.upper() or "PHONE" in name.upper() or "ANDROID" in name.upper()):
             img = ICON_PHONE
         elif any(x in name.upper() for x in ICON_PI_PREFIXES):
-            # elif ("RASPBERRY" in name.upper() or "PI" in name.upper()):
             img = ICON_PI
         elif any(x in name.upper() for x in ICON_NOTEBOOK_PREFIXES):
-            # elif ("PC-" in name.upper() or "NB-" in name.upper()):
             img = ICON_NOTEBOOK
-        elif any(x in name.upper() for x in IOT_NAME_PREFIXES):
-            # elif ("ESP-" in name.upper() or "IOT" in name.upper() or "TASMOTA" in name.upper()):
+        elif any(x in name.upper() for x in ICON_IOT_NAME_PREFIXES):
             img = ICON_IOTCLOUD
+        elif any(x in name.upper() for x in ICON_BOX_NAME_PREFIXES):
+            img = ICON_BOX
 
         return img
 
