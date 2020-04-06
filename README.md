@@ -47,7 +47,8 @@ Person Images are from [DomoticzIcons](https://drive.google.com/folderview?id=0B
 - Python >= 3.6 (mainly depending on requirements for fritzconnection)
 - install needed python modules:
     - fritzconnection version 1.2.1
-    - or use `pip3 install -r requirements.txt` 
+    - or use `sudo pip3 install -r requirements.txt` 
+    - might be worth testing fritzconnection - just run `fritzconnection`
 - clone project
     - go to `domoticz/plugins` directory 
     - clone the project
@@ -60,17 +61,19 @@ Person Images are from [DomoticzIcons](https://drive.google.com/folderview?id=0B
   - what does it do: tries to scan name for this device for special chunks and pick different images for them
   - where: plugin.py 
   - what: eg  `ICON_PI_PREFIXES = ["RASPBERRY", "PI"]` will cause all devices containing PI to use raspberry image
-- make sure downloaded modules are in path eg. sitepackages python paths or change in plugin.py the path
-```bash
-import sys
-sys.path
-sys.path.append('/usr/lib/python3/dist-packages')
-# for synology python3 from community
-# sys.path.append('/volume1/@appstore/python3/lib/python3.5/site-packages')
-# for synology sys.path.append('/volume1/@appstore/py3k/usr/local/lib/python3.5/site-packages')
-# for windows check if installed packages as admin or user...
-# sys.path.append('C:\\Program Files (x86)\\Python37-32\\Lib\\site-packages')
-```
+- no need on Raspbian for sys path adaption if using sudo for pip3
+- some extra work for Windows or Synology, make sure downloaded modules are in path eg. site-packages python paths or change in plugin.py / fritzHelper.py path
+  - example adaption:
+    ```bash
+    import sys
+    sys.path
+    sys.path.append('/usr/lib/python3/dist-packages')
+    # for synology python3 from community
+    # sys.path.append('/volume1/@appstore/python3/lib/python3.5/site-packages')
+    # for synology sys.path.append('/volume1/@appstore/py3k/usr/local/lib/python3.5/site-packages')
+    # for windows check if installed packages as admin or user...
+    # sys.path.append('C:\\Program Files (x86)\\Python37-32\\Lib\\site-packages')
+    ```
 - restart Domoticz service
 - Now go to **Setup**, **Hardware** in your Domoticz interface. There add
 **Fritz!Presence Plugin**.
