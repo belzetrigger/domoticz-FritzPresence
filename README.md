@@ -43,7 +43,7 @@ Person Images are from [DomoticzIcons](https://drive.google.com/folderview?id=0B
   - assign rights to this user
   
 ## Installation and Setup
-- a running Domoticz: tested with 4.10717 and 2020.1 with Python 3.8
+- a running Domoticz: tested with 4.10717 and 2020.1 with Python 3.7
 - Python >= 3.6 (mainly depending on requirements for fritzconnection)
 - install needed python modules:
     - fritzconnection version 1.2.1
