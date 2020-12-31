@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from typing import List
 from typing import Any, Dict
 import sys
+
 # sys.path
 # sys.path.append('/usr/lib/python3/dist-packages')
 # sys.path.append(
@@ -14,11 +15,13 @@ import sys
 try:
     import Domoticz
 except ImportError:
-    import fakeDomoticz as Domoticz
-try:
-    from fritzconnection.lib.fritzhosts import FritzHosts
-except ModuleNotFoundError as e:
-    Domoticz.Error("could not load fritzconnection ...{}".format(e))
+    from . import fakeDomoticz as Domoticz
+
+# try:
+from fritzconnection.lib.fritzhosts import FritzHosts
+
+# except ModuleNotFoundError as e:
+#    Domoticz.Error("could not load fritzconnection ...{}".format(e))
 
 import itertools
 
@@ -30,7 +33,9 @@ class PresDevice:
         [type] -- [description]
     """
 
-    def __init__(self, macAddress: str, defaultName: str = None, cooldownperiod: int = 30):
+    def __init__(
+        self, macAddress: str, defaultName: str = None, cooldownperiod: int = 30
+    ):
         self.cooldownperiod = cooldownperiod
         self.macAddress = macAddress
         self.defaultName = defaultName
@@ -49,23 +54,28 @@ class PresDevice:
         self.errorMsg = error
 
     def dumpConfig(self):
-        """print device config to log
-        """
-        Domoticz.Debug(
-            "mac:{}\t"
-            "name: {}".format(self.macAddress, self.defaultName)
-        )
+        """print device config to log"""
+        Domoticz.Debug("mac:{}\t" "name: {}".format(self.macAddress, self.defaultName))
 
     def getDeviceName(self):
-        """get default name
+        """get device name
+           TODO better device and default if empty
 
         Returns:
             [str] -- the device name
         """
-        if(self.defaultName is not None and len(self.defaultName) > 1):
+        if self.deviceName is None:
             return self.defaultName
         else:
             return self.deviceName
+
+    def getDeviceIP(self):
+        """get IP address of the device
+
+        Returns:
+            [str] -- the device IP address
+        """
+        return self.deviceIp
 
     def reset(self):
         self.deviceName = None
@@ -77,7 +87,10 @@ class PresDevice:
         self.needUpdate = False
 
     def verifyUpdate(self):
-        if(self.deviceLastIsConnected != self.deviceIsConnected or self.deviceLastIp != self.deviceIp):
+        if (
+            self.deviceLastIsConnected != self.deviceIsConnected
+            or self.deviceLastIp != self.deviceIp
+        ):
             self.needUpdate = True
         else:
             self.needUpdate = False
@@ -85,8 +98,9 @@ class PresDevice:
         # copy values to compare later
         self.deviceLastIsConnected = self.deviceIsConnected
         self.deviceLastIp = self.deviceIp
-        Domoticz.Debug("{} updated needed?: {}".format(self.getDeviceName(),
-                                                       self.needUpdate))
+        Domoticz.Debug(
+            "{} updated needed?: {}".format(self.getDeviceName(), self.needUpdate)
+        )
 
     def readStatus(self, fcHosts: FritzHosts):
         """read the status for this device
@@ -99,20 +113,26 @@ class PresDevice:
             isPresent = False
             name = None
             ip = None
-            result = fcHosts.get_specific_host_entry(self.macAddress)
+            mac = self.macAddress
+            if not mac:
+                raise ValueError("mac is empty")
+            result = fcHosts.get_specific_host_entry(mac)
             if result is not None:
-                Domoticz.Debug("result: ip:{} name:{} active:{}"
-                               .format(
-                                   result['NewIPAddress'],
-                                   result['NewHostName'],
-                                   result['NewActive']
-                               ))
-                isPresent = (result['NewActive'] == 1
-                             or result['NewActive'] == '1')
-                name = result['NewHostName']
-                ip = result['NewIPAddress']
-                if (isPresent is False and self.lastUpdate and
-                        self.deviceLastIsConnected is True):
+                Domoticz.Debug(
+                    "result: ip:{} name:{} active:{}".format(
+                        result["NewIPAddress"],
+                        result["NewHostName"],
+                        result["NewActive"],
+                    )
+                )
+                isPresent = result["NewActive"] == 1 or result["NewActive"] == "1"
+                name = result["NewHostName"]
+                ip = result["NewIPAddress"]
+                if (
+                    isPresent is False
+                    and self.lastUpdate
+                    and self.deviceLastIsConnected is True
+                ):
                     Domoticz.Debug("device turned off - check cool down time")
                     n = datetime.now()
                     Domoticz.Debug("now {}".format(n))
@@ -120,9 +140,10 @@ class PresDevice:
 
                     delta = (n - self.lastUpdate).total_seconds()
                     Domoticz.Debug("delta: {}".format(delta))
-                    if(delta > float(self.cooldownperiod)):
-                        Domoticz.Debug("It's time to tell domoticz,"
-                                       "that device is off")
+                    if delta > float(self.cooldownperiod):
+                        Domoticz.Debug(
+                            "It's time to tell domoticz," "that device is off"
+                        )
                         self.deviceIp = ip
                         self.deviceName = name
                         self.deviceIsConnected = isPresent
@@ -130,7 +151,8 @@ class PresDevice:
                         self.lastUpdate = datetime.now()
                     else:
                         Domoticz.Debug(
-                            "Device is just a short time away ... ignore for this time and wait")
+                            "Device is just a short time away ... ignore for this time and wait"
+                        )
                 else:
                     # device is online / no special handling
                     self.deviceIp = ip
@@ -141,11 +163,14 @@ class PresDevice:
 
         except (Exception) as e:
             self.setMyError(e)
-            Domoticz.Error("Error on readStatus for Device: {} msg: '{}'; hasError:{}"
-                           .format(self.deviceName, e, str(self.hasError)))
+            Domoticz.Error(
+                "Error on readStatus for Device: {} ({}) msg: '{}'; hasError:{}".format(
+                    self.deviceName, self.macAddress, e, str(self.hasError)
+                )
+            )
 
     def getShortSummary(self, seperator: str = "\t"):
-        s = '{} is on: {}'.format(self.defaultName, self.deviceIsConnected)
+        s = "{} is on: {}".format(self.defaultName, self.deviceIsConnected)
         return s
 
     def getSummary(self):
@@ -163,9 +188,15 @@ class FritzHelper:
         [type] -- [description]
     """
 
-    def __init__(self, fbHost: str, fbUser: str,
-                 fbPassword: str, macAddresses: List[str], defaultNames: List[str] = None,
-                 cooldownperiod: int = 30):
+    def __init__(
+        self,
+        fbHost: str,
+        fbUser: str,
+        fbPassword: str,
+        macAddresses: List[str],
+        defaultNames: List[str] = None,
+        cooldownperiod: int = 30,
+    ):
         """create and init the fritz helper
 
         Arguments:
@@ -181,13 +212,16 @@ class FritzHelper:
         self.fbHost = fbHost
         self.fbUser = fbUser
         self.fbPassword = fbPassword
-        self.deviceCounter = len(macAddresses)
+        # self.deviceCounter = len(macAddresses)
         # self.devices = {}  # type: Dict[str, PresDevice]
         self.devices: Dict[str, PresDevice] = {}
         for i in range(len(macAddresses)):
             adr = macAddresses[i]
+            if not adr:
+                Domoticz.Error("found empty mac in list, skip it")
+                continue
             n = None
-            if(defaultNames is not None and defaultNames[i] is not None):
+            if defaultNames is not None and defaultNames[i] is not None:
                 n = defaultNames[i]
             self.devices.update({adr: PresDevice(adr, n, cooldownperiod)})
 
@@ -199,10 +233,7 @@ class FritzHelper:
         self.reset()
 
     def dumpConfig(self):
-        Domoticz.Debug(
-            "fritz:{}\t"
-            .format(self.fbHost)
-        )
+        Domoticz.Debug("fritz:{}\t".format(self.fbHost))
         for value in self.devices.values():
             value.dumpConfig()
 
@@ -218,7 +249,7 @@ class FritzHelper:
         Returns:
             [type] -- true if index is okay
         """
-        if (mac in self.devices):
+        if mac in self.devices:
             return True
         else:
             Domoticz.Error("Given index '{}' not valid.".format(mac))
@@ -232,9 +263,9 @@ class FritzHelper:
             boolean -- if True -> please update the device in domoticz
         """
         update = False
-        if(self.validateDeviceIndex(mac)):
+        if self.validateDeviceIndex(mac):
             d = self.devices.get(mac)
-            if(d):
+            if d:
                 update = d.needUpdate
         else:
             Domoticz.Error("Given mac not valid.")
@@ -255,9 +286,7 @@ class FritzHelper:
         """
         Domoticz.Debug("Try to get FritzHost Connection")
         self.fcHosts = FritzHosts(
-            address=self.fbHost,
-            user=self.fbUser,
-            password=self.fbPassword
+            address=self.fbHost, user=self.fbUser, password=self.fbPassword
         )
         return self.fcHosts
 
@@ -271,9 +300,9 @@ class FritzHelper:
 
     def addDevice(self, host):
         Domoticz.Debug("addDevice")
-        mac = host['mac']
-        name = host['name']
-        if (mac in self.devices):
+        mac = host["mac"]
+        name = host["name"]
+        if mac in self.devices:
             Domoticz.Debug("addHost: {} - already there".format(mac))
         else:
             Domoticz.Debug("addHost: {} - new one.".format(mac))
@@ -292,7 +321,7 @@ class FritzHelper:
         mac = mac
         if not name:
             name = mac
-        if (mac in self.devices):
+        if mac in self.devices:
             Domoticz.Debug("addHost: {} - already there".format(mac))
         else:
             Domoticz.Debug("addHost: {} - new one.".format(mac))
@@ -306,7 +335,7 @@ class FritzHelper:
             devices[] -- The dict-keys are: 'ip', 'name', 'mac', 'status', 'interface'
         """
         Domoticz.Debug("get all active hosts from {}".format(self.fbHost))
-        return [host for host in self.getAllHosts() if (host['interface'] == '802.11')]
+        return [host for host in self.getAllHosts() if (host["interface"] == "802.11")]
 
     def getEthernetHosts(self):
         """
@@ -316,7 +345,9 @@ class FritzHelper:
             devices[] -- The dict-keys are: 'ip', 'name', 'mac', 'status', 'interface'
         """
         Domoticz.Debug("get all active hosts from {}".format(self.fbHost))
-        return [host for host in self.getAllHosts() if (host['interface'] == 'Ethernet')]
+        return [
+            host for host in self.getAllHosts() if (host["interface"] == "Ethernet")
+        ]
 
     def getActiveHosts(self):
         """
@@ -326,7 +357,7 @@ class FritzHelper:
             devices[] -- The dict-keys are: 'ip', 'name', 'mac', 'status', 'interface'
         """
         Domoticz.Debug("get all active hosts from {}".format(self.fbHost))
-        return [host for host in self.getAllHosts() if host['status']]
+        return [host for host in self.getAllHosts() if host["status"]]
 
     def getAllHosts(self):
         """All known host from this fritz box
@@ -337,7 +368,7 @@ class FritzHelper:
         Domoticz.Debug("get all hosts from {}".format(self.fbHost))
         try:
             self.resetError()
-            if(self.fcHosts is None):
+            if self.fcHosts is None:
                 self.connect()
             fh = self.fcHosts
             devices = []
@@ -348,19 +379,24 @@ class FritzHelper:
                 except IndexError:
                     # no more host entries:
                     break
-                devices.append({
-                    'ip': host['NewIPAddress'],
-                    'name': host['NewHostName'],
-                    'mac': host['NewMACAddress'],
-                    'status': host['NewActive'],
-                    'interface': host['NewInterfaceType']},
+                devices.append(
+                    {
+                        "ip": host["NewIPAddress"],
+                        "name": host["NewHostName"],
+                        "mac": host["NewMACAddress"],
+                        "status": host["NewActive"],
+                        "interface": host["NewInterfaceType"],
+                    },
                 )
 
             return devices
         except (Exception) as e:
             self.setMyError(e)
-            Domoticz.Error("Error on getAllHosts: msg '{}'; hasError:{}"
-                           .format(e, str(self.hasError)))
+            Domoticz.Error(
+                "Error on getAllHosts: msg '{}'; hasError:{}".format(
+                    e, str(self.hasError)
+                )
+            )
 
     def wakeOnLan(self, macAddress: str):
         """Sends the 'Magic packet' for wake on LAN
@@ -372,27 +408,28 @@ class FritzHelper:
         Domoticz.Debug("wakeOnLan {}".format(macAddress))
         try:
             self.resetError()
-            if(self.fcHosts is None):
+            if self.fcHosts is None:
                 self.connect()
             fh = self.fcHosts
-            if(fh):
-                fh._action(
-                    'X_AVM-DE_WakeOnLANByMACAddress', NewMACAddress=macAddress
-                )
+            if fh:
+                fh._action("X_AVM-DE_WakeOnLANByMACAddress", NewMACAddress=macAddress)
 
         except (Exception) as e:
             self.setMyError(e)
-            Domoticz.Error("Error on getAllHosts: msg '{}'; hasError:{}"
-                           .format(e, str(self.hasError)))
+            Domoticz.Error(
+                "Error on wakeOnLan: msg '{}'; hasError:{}".format(
+                    e, str(self.hasError)
+                )
+            )
 
     def readStatus(self):
         """reset all old errors and tries to get fresh status about all devices in list
-           on error, we will set internal error
+        on error, we will set internal error
         """
         Domoticz.Debug("read status for {}".format(self.fbHost))
         try:
             self.resetError()
-            if(self.fcHosts is None):
+            if self.fcHosts is None:
                 self.connect()
             fh = self.fcHosts
             for value in self.devices.values():
@@ -400,26 +437,51 @@ class FritzHelper:
 
         except (Exception) as e:
             self.setMyError(e)
-            Domoticz.Error("Error on readStatus: msg '{}'; hasError:{}"
-                           .format(e, str(self.hasError)))
+            Domoticz.Error(
+                "Error on readStatus: msg '{}'; hasError:{}".format(
+                    e, str(self.hasError)
+                )
+            )
 
     def stop(self):
         self.stopped = True
 
     def isDeviceConnected(self, mac: str):
         t = False
-        if(self.validateDeviceIndex(mac)):
+        if self.validateDeviceIndex(mac):
             d = self.devices.get(mac)
-            if(d):
+            if d:
                 t = d.deviceIsConnected
         return t
 
     def getDeviceName(self, mac: str):
+        """device name or default name if null/none
+
+        Args:
+            mac (str):  valid mac address of the device
+
+        Returns:
+            [str]: device name or default name if null/none
+        """
         s = ""
-        if(self.validateDeviceIndex(mac)):
+        if self.validateDeviceIndex(mac):
             d = self.devices.get(mac)
-            if(d):
+            if d:
                 s = d.getDeviceName()
+        return s
+    
+    def getDeviceIP(self, mac: str):
+        """get IP address of the device
+        Args:
+            mac (str): valid mac address of the device
+        Returns:
+            [str] -- the device IP address
+        """
+        s = ""
+        if self.validateDeviceIndex(mac):
+            d = self.devices.get(mac)
+            if d:
+                s = d.getDeviceIP()
         return s
 
     def getShortSummary(self, seperator: str = "\t"):

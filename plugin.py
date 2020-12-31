@@ -6,7 +6,7 @@
 
 """
 <plugin key="FritzPresence" name="Fritz!Presence Plugin"
-    author="belze" version="0.6.3" >
+    author="belze" version="0.6.4" >
     <!--
     wikilink="http://www.domoticz.com/wiki/plugins/plugin.html"
     externallink="https://github.com/belzetrigger/domoticz-FritzPresence"
@@ -80,13 +80,14 @@
 from datetime import datetime, timedelta
 # from os import path
 import sys
+from typing import List
 try:
     import Domoticz
 except ImportError:
     import fakeDomoticz as Domoticz
 
 try:
-    from fritzHelper import FritzHelper
+    from fritzhelper.fritzHelper import FritzHelper
 except ImportError as e:
     pass
 
@@ -401,7 +402,7 @@ class BasePlugin:
                 updateDeviceByUnit(Unit=UNIT_CMD_SWITCH_IDX, alarmLevel=1, alarmData="", name=UNIT_CMD_SWITCH_NAME,
                                    dscr="Configure your devices", alwaysUpdate=True)
 
-                # check for alll devices the state
+                # check for all devices the state
                 for x in Devices:
                     if Devices[x].Unit >= UNIT_DEV_START_IDX:
                         mac = Devices[x].DeviceID

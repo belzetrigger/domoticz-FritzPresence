@@ -128,3 +128,4 @@ foo.py
 bash.exe.stackdump
 check_device_online.py
 *.db
+my_config.ini

@@ -5,8 +5,8 @@
 [![GitHub license](https://img.shields.io/github/license/belzetrigger/domoticz-FritzBox.svg)](https://github.com/belzetrigger/domoticz-FritzPresence/blob/master/LICENSE)
 -->
 
-[![PyPI pyversions](https://img.shields.io/badge/python-3.6%20|%203.7%20|%203.8-blue.svg)]() 
-[![Plugin version](https://img.shields.io/badge/version-0.6.3-red.svg)](https://github.com/belzetrigger/domoticz-FritzPresence/branches/)
+[![PyPI pyversions](https://img.shields.io/badge/python-3.6%20|%203.7%20|%203.8%203.9-blue.svg)]() 
+[![Plugin version](https://img.shields.io/badge/version-0.6.4-red.svg)](https://github.com/belzetrigger/domoticz-FritzPresence/branches/)
 
 Primary a Presence Detector that works with your [Fritz!Box](https://en.avm.de/, 'Fritz!Box are quite famous router from avm'). And also lets you add easily other known hosts from your Box to Domoticz.
 
@@ -43,10 +43,10 @@ Person Images are from [DomoticzIcons](https://drive.google.com/folderview?id=0B
   - assign rights to this user
   
 ## Installation and Setup
-- a running Domoticz: tested with 4.10717 and 2020.1 with Python 3.7
+- a running Domoticz: 2020.2 with Python 3.7
 - Python >= 3.6 (mainly depending on requirements for fritzconnection)
 - install needed python modules:
-    - fritzconnection version 1.2.1
+    - fritzconnection version 1.4.0
     - or use `sudo pip3 install -r requirements.txt` 
     - might be worth testing fritzconnection - just run `fritzconnection`
 - clone project
@@ -100,7 +100,7 @@ this functions are supported
 Keep in mind, normally a device must have been recent active to have a connection type. Also VPN devices are special, as they might not have a MAC-Address.
 
 ### Wake on LAN
-To send magic packet just click on an `off` device to switch it on. WOL works only for ethernet. And the hardware must support it! For example the network adapter on Raspberry Pi does not support it.
+To send magic packet just click on an `off` device to switch it on. WOL works only for ethernet. And the hardware must support it! For example the network adapter on Raspberry Pi 3 does not support it.
 
 ## Bugs and ToDos
 - integrate a threshold, when it is more stressless for router to get full device list and parse this, instead of getting 20 devices/host information
@@ -110,6 +110,7 @@ To send magic packet just click on an `off` device to switch it on. WOL works on
 ## Versions
 | Version | Note                                                                                     |
 | ------- | ---------------------------------------------------------------------------------------- |
+| 0.6.4   | small stability fixes, a bit restructure and tested with new version of lib              |
 | 0.6.3   | button to add/remove know hosts from Fritz!Box to Domoticz and support for "Wake on LAN" |
 | 0.6.2   | supports ';' separated list of MAC and names                                             |
 | \>= 0.6 | works with new fritzconnection 1.2.1 and so without need of lxml but Python >= 3.6       |
@@ -125,7 +126,8 @@ Under development but main function runs quite stabile.
 ## Developing
 Based on https://github.com/ffes/domoticz-buienradar/ there are
  -  `fakeDomoticz.py` - used to run it outside of Domoticz
- -  `test.py` it's the entry point for tests
+ -  inside folder `test` are small unittest cases
+ -  before you can run them, copy `sample_config.ini` to `my_config.ini` and adapt values
 
 
 
