@@ -234,7 +234,8 @@ class BasePlugin:
             # init with empty data
             updateDeviceByDevId(devId=self.macList[i], alarmLevel=0, alarmData="No Data jet", name=devName)
             # TODO init icon would be better
-            updateImageByDevId(self.macList[i], ICON_PERSON)
+            # BLZ: 2021-04-19: removed to avoid overwriting custom images see issue#2
+            # updateImageByDevId(self.macList[i], ICON_PERSON)
 
         # blz: test first init, after that get helper
         self.fritz = FritzHelper(self.host, self.user, self.password,
