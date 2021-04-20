@@ -110,7 +110,7 @@ To send magic packet just click on an `off` device to switch it on. WOL works on
 ## Versions
 | Version | Note                                                                                     |
 | ------- | ---------------------------------------------------------------------------------------- |
-| 0.6.4   | small stability fixes, a bit restructure and tested with new version of lib              |
+| 0.6.4   | small stability fixes, a bit restructure and tested with new version of lib <br>for issue#2, avoid resetting images on startup also if MAC-List is used, so custom symbols will be kept   |
 | 0.6.3   | button to add/remove know hosts from Fritz!Box to Domoticz and support for "Wake on LAN" |
 | 0.6.2   | supports ';' separated list of MAC and names                                             |
 | \>= 0.6 | works with new fritzconnection 1.2.1 and so without need of lxml but Python >= 3.6       |
