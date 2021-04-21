@@ -73,7 +73,7 @@
                 <option label="False" value="Normal"  default="False" />
             </options>
         </param>
-        <param field="Port" label="domoticz port" width="75px" required="true" default="8080"
+        <param field="Port" label="domoticz port" width="75px" required="true" default="8080"/>
         
     </params>
 </plugin>
