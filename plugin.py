@@ -78,6 +78,8 @@
     </params>
 </plugin>
 """
+#BLZ 2021-04-21: new lib for renamin work around via JSON-API
+import urllib
 # import datetime as dt
 from datetime import datetime, timedelta
 # from os import path
@@ -426,6 +428,7 @@ class BasePlugin:
                             if(name != Devices[x].Name):                             
                               url = "http://localhost:{}/json.htm?param=renamedevice&type=command&idx={}&name={}".format(Parameters('Port'),Devices[x].ID,name)
                               Domoticz.Log("BLZ: new name!  call: {}".format(url))
+                              contents = urllib.request.urlopen(url).read()  
                          
 
             Domoticz.Debug(
