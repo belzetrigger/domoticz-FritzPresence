@@ -426,7 +426,7 @@ class BasePlugin:
                                                 name)
                             #2021-04-21 BLZ: dirty workaround to update name, as python api does not support it directly
                             if(name != Devices[x].Name):                             
-                              url = "http://localhost:{}/json.htm?param=renamedevice&type=command&idx={}&name={}".format(Parameters('Port'),Devices[x].ID,name)
+                              url = "http://localhost:{}/json.htm?param=renamedevice&type=command&idx={}&name={}".format(Parameters['Port'],Devices[x].ID,name)
                               Domoticz.Log("BLZ: new name!  call: {}".format(url))
                               contents = urllib.request.urlopen(url).read()  
                          
