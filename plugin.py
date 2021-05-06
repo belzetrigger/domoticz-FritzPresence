@@ -73,9 +73,13 @@
                 <option label="False" value="Normal"  default="False" />
             </options>
         </param>
+        <param field="Port" label="domoticz port" width="75px" required="true" default="8080"/>
+        
     </params>
 </plugin>
 """
+#BLZ 2021-04-21: new lib for renamin work around via JSON-API
+import urllib
 # import datetime as dt
 from datetime import datetime, timedelta
 # from os import path
@@ -192,16 +196,20 @@ class BasePlugin:
             Domoticz.Log("Mac Addresses are empty. Use admin switch to add.")
         else:
             self.macList = Parameters["Mode5"].split(';')
+            # BLZ 2021-04-20: Test without names, just use macs .... 
+            # we would update name later with hostname from fritz box anyway
+            Domoticz.Debug("Now we just use MAC as names for init, should replaced later with name from Fritz!Box.")
+            self.nameList = Parameters["Mode5"].split(';')
             # just for security
-            if(Parameters['Name'] is not None):
-                self.nameList = Parameters['Name'].split(';')
-                # just for quality
-                if(len(self.nameList) != len(self.macList)):
-                    Domoticz.Error("Amount of Names does not fit defined addresses. Use now MAC Address as names.")
-                    self.nameList = Parameters["Mode5"].split(';')
-            else:
-                Domoticz.Error("No Names defined in configuration. Using mac addresses first.")
-                self.nameList = Parameters["Mode5"].split(';')
+            # if(Parameters['Name'] is not None):
+            #    self.nameList = Parameters['Name'].split(';')
+            #    # just for quality
+            #    if(len(self.nameList) != len(self.macList)):
+            #        Domoticz.Error("Amount of Names does not fit defined addresses. Use now MAC Address as names.")
+            #        self.nameList = Parameters["Mode5"].split(';')
+            # else:
+            #    Domoticz.Error("No Names defined in configuration. Using mac addresses first.")
+            #    self.nameList = Parameters["Mode5"].split(';')
         self.defName = None
 
         # check images
@@ -416,6 +424,12 @@ class BasePlugin:
                             name = self.fritz.getDeviceName(mac)
                             updateDeviceByDevId(mac, connected, "", "",
                                                 name)
+                            #2021-04-21 BLZ: dirty workaround to update name, as python api does not support it directly
+                            if(name != Devices[x].Name):                             
+                              url = "http://localhost:{}/json.htm?param=renamedevice&type=command&idx={}&name={}".format(Parameters['Port'],Devices[x].ID,name)
+                              Domoticz.Log("BLZ: new name!  call: {}".format(url))
+                              contents = urllib.request.urlopen(url).read()  
+                         
 
             Domoticz.Debug(
                 "----------------------------------------------------")
