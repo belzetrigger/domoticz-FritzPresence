@@ -2,31 +2,37 @@
 #
 # Author: belze
 #
+from blz import blzHelperInterface
+import re
 
 
 """
 <plugin key="FritzPresence" name="Fritz!Presence Plugin"
-    author="belze" version="0.6.4" >
-    <!--
+    author="belze" version="0.7.0" 
+    externallink="https://github.com/belzetrigger/domoticz-FritzPresence" >
+    
+    <!--    
     wikilink="http://www.domoticz.com/wiki/plugins/plugin.html"
-    externallink="https://github.com/belzetrigger/domoticz-FritzPresence"
     //-->
     <description>
         <h2>Fritz!Presence</h2><br/>
         Does two things. Mainly adds your IT devices known by your Fritz!Box to 
-        domoticz and shows the current statusself.
-        So you can determine the presence of people if for example mobile phone is connected-
+        domoticz and shows the current status.
+        So you can determine the presence of people if for example mobile phone is connected. 
+        Or check if hardware is still a live. 
         <h3>Features</h3>
         <ul style="list-style-type:square">
             <li>uses router information to show state of a device.</li>
             <li>works better than ping, if mobile phone use some energy saving options</li>
             <li>supports multiple devices - just add the MAC Addresses separeted by ';' </li>
-            <li>on error device will be shown as absence (turned off) and config shows 'Error' </li>
+            <li>on error: the device will be shown as absence (turned off) and config shows 'Error' </li>
             <li>using the MAC as internal DeviceID
                 <ul>
                 <li>so if order changes, there is a chance to pick the right one</li>
-                <li>also means you could have some name on two devices</li>
+                <li>also means you could have same name on two devices</li>
                 </ul>
+            </li>
+            <li>replaces or updates device names by the one used on the Fritz!Box
             </li>
             <li>button to administrate devices known by router
                 <ul>
@@ -37,11 +43,9 @@
                 <li>remove all devices under this hardware</li>
                 </ul>
            </li>
-           <li>based on names, this plugin tries to add differant images</li>
+           <li>based on device names, this plugin tries to add differant images - if using admin panel</li>
            <li>WOL: send magic packets to your ethernet device</li>
-            <li>(Future)cool down phase. Handle short absence of device not as absence.  
-            Maybe WiFi connection might be interrupted on restart phone.  
-            </li>
+           
         </ul>
         <h3>Devices</h3>
         for each MAC address there will be one device generated
@@ -51,22 +55,22 @@
         </ul>
         <h3>Configuration</h3>
         Use a list of MAC Addresses seperated by ';' if you want to add more
-        devices. If you do so, please use also the name field in the same way.
+        devices. Note! There is no need to put names also in name field as a list.
         For bare use with admin switch, leave it blank.
 
     </description>
     <params>
         <param field="Mode1" label="Hostname or IP" width="200px"
         required="true" default="fritz.box"/>
-        <param field="Mode2" label="User" width="200px" required="false"
+        <param field="Username" label="User" width="200px" required="false"
         />
-        <param field="Mode3" label="Password" width="200px" required="false"
+        <param field="Password" label="Password" width="200px" required="false"
         password="true"
         />
+        <param field="Port" label="domoticz port" width="75px" required="true" default="8080"/>
         <param field="Mode4" label="Update every x minutes" width="200px"
         required="true" default="5"/>
         <param field="Mode5" label="MACAddresses" width="350px"/>
-        <param field="Mode7" label="cooldownphase" width="75px"/>
         <param field="Mode6" label="Debug" width="75px">
             <options>
                 <option label="True" value="Debug"/>
@@ -78,18 +82,25 @@
 """
 # import datetime as dt
 from datetime import datetime, timedelta
-# from os import path
 import sys
 from typing import List
 try:
     import Domoticz
 except ImportError:
-    import fakeDomoticz as Domoticz
+    from blz import fakeDomoticz as Domoticz
+    from blz.fakeDomoticz import Parameters
+    from blz.fakeDomoticz import Devices
+    from blz.fakeDomoticz import Images
+
+#from blz.blzHelperInterface import BlzHelperInterface
+
 
 try:
     from fritzhelper.fritzHelper import FritzHelper
 except ImportError as e:
     pass
+
+import urllib.request                   #for name hack via JSON-API Call
 
 # sys.path
 # sys.path.append('/usr/lib/python3/dist-packages')
@@ -97,7 +108,7 @@ except ImportError as e:
 # sys.path.append('/volume1/@appstore/py3k/usr/local/lib/python3.5/site-packages')
 # sys.path.append('C:\\Program Files (x86)\\Python37-32\\Lib\\site-packages')
 
-PARAM_PASS: str = 'Mode3'  # parameter that holds password
+PARAM_PASS: str = 'Password'  # parameter that holds password
 
 # icons
 ICON_ADMIN = "FritzPresenceAdmin"   # icon used for fritz box switch and alert
@@ -185,23 +196,33 @@ class BasePlugin:
             str(self.pollinterval)))
 
         self.host = Parameters["Mode1"]
-        self.user = Parameters["Mode2"]
-        self.password = Parameters["Mode3"]
-        # self.macAddress = Parameters["Mode5"]
+        self.user = Parameters["Username"]
+        self.password = Parameters["Password"]
+
+        if( blzHelperInterface.isBlank(self.user) or blzHelperInterface.isBlank(self.password) ):
+            Domoticz.Error("No username / password set - please update setting.")
+            raise ValueError("Username and password must be given.")
+
+        # MAC Addresses
         if(not Parameters["Mode5"]):
             Domoticz.Log("Mac Addresses are empty. Use admin switch to add.")
         else:
             self.macList = Parameters["Mode5"].split(';')
+            # BLZ 2021-04-20: Test without names, just use macs .... 
+            # we would update name later with hostname from fritz box anyway
+            Domoticz.Debug("Now we just use MAC as names for init, should replaced later with name from Fritz!Box.")
+            self.nameList = Parameters["Mode5"].split(';')
             # just for security
-            if(Parameters['Name'] is not None):
-                self.nameList = Parameters['Name'].split(';')
-                # just for quality
-                if(len(self.nameList) != len(self.macList)):
-                    Domoticz.Error("Amount of Names does not fit defined addresses. Use now MAC Address as names.")
-                    self.nameList = Parameters["Mode5"].split(';')
-            else:
-                Domoticz.Error("No Names defined in configuration. Using mac addresses first.")
-                self.nameList = Parameters["Mode5"].split(';')
+            # if(Parameters['Name'] is not None):
+            #    self.nameList = Parameters['Name'].split(';')
+            #    # just for quality
+            #    if(len(self.nameList) != len(self.macList)):
+            #        Domoticz.Error("Amount of Names does not fit defined addresses. Use now MAC Address as names.")
+            #        self.nameList = Parameters["Mode5"].split(';')
+            # else:
+            #    Domoticz.Error("No Names defined in configuration. Using mac addresses first.")
+            #    self.nameList = Parameters["Mode5"].split(';')
+
         self.defName = None
 
         # check images
@@ -222,18 +243,21 @@ class BasePlugin:
         # create selector switch, to deal with admin stuff
         createSelectorSwitch()
 
-        # use hard ware name and mac as dummy name
+        # use no more  hard ware name - just uses mac as dummy name
         for i in range(len(self.macList)):
-            devName = ""
-            if(self.nameList[i]):
-                devName = self.nameList[i]
-            else:
-                devName = "{}_{}".format(Parameters['Name'], self.macList[i])
+            mac = self.macList[i]
+            if not blzHelperInterface.isValidMAC(mac):
+                Domoticz.Error("Invalid MAC Address on index {}='{}' skip this entry.".format(i, mac))
+                continue
+            #if(self.nameList[i]):
+            #    devName = self.nameList[i]
+            #else:
+            #    devName = "{}_{}".format(Parameters['Name'], self.macList[i])
+            
             # Check if devices need to be created
-            createDevice(unit=i + UNIT_DEV_START_IDX, devName=devName, devId=self.macList[i])
+            createDevice(unit=i + UNIT_DEV_START_IDX, devName=mac, devId=mac)
             # init with empty data
-            updateDeviceByDevId(devId=self.macList[i], alarmLevel=0, alarmData="No Data jet", name=devName)
-            # TODO init icon would be better
+            updateDeviceByDevId(devId=mac, alarmLevel=0, alarmData="No Data jet", name=mac)
             # BLZ: 2021-04-19: removed to avoid overwriting custom images see issue#2
             # updateImageByDevId(self.macList[i], ICON_PERSON)
 
@@ -249,8 +273,8 @@ class BasePlugin:
         for x in Devices:
             if Devices[x].Unit >= UNIT_DEV_START_IDX:
                 mac = Devices[x].DeviceID
-                name = Devices[x].Name
-                self.fritz.addDeviceByMac(mac, name)
+                # BLZ 2021-04-20: no default name;s name = Devices[x].Name
+                self.fritz.addDeviceByMac(mac)
 
     def onStop(self):
         if(self.fritz is not None):
@@ -367,7 +391,7 @@ class BasePlugin:
             # TODO handle fritz is None
             if(self.fritz is None):
                 Domoticz.Error(
-                    "Uuups. Fritz is None")
+                    "Uuups. Fritz is None. Try to recreate.")
                 self.fritz = FritzHelper(self.host, self.user, self.password,
                                          self.macList)
 
@@ -407,15 +431,21 @@ class BasePlugin:
                 for x in Devices:
                     if Devices[x].Unit >= UNIT_DEV_START_IDX:
                         mac = Devices[x].DeviceID
-                        Domoticz.Debug("nr {} mac {}".format(x, mac))
+                        name = self.fritz.getDeviceName(mac)
+                        Domoticz.Debug("nr {} mac {} name {}".format(x, mac, name))
+                        
                         if self.fritz.needsUpdate(mac) is True:
                             connected = 1
                             if(self.fritz.isDeviceConnected(mac) is False):
                                 connected = 0
-                            # TODO what we should use as name?
-                            name = self.fritz.getDeviceName(mac)
                             updateDeviceByDevId(mac, connected, "", "",
                                                 name)
+                        if(name != Devices[x].Name):                             
+                            url = "http://localhost:{}/json.htm?param=renamedevice&type=command&idx={}&name={}".format(Parameters['Port'],Devices[x].ID,name)
+                            Domoticz.Debug("BLZ: new name!  call: {}".format(url))
+                            contents = urllib.request.urlopen(url).read()
+
+
 
             Domoticz.Debug(
                 "----------------------------------------------------")
@@ -498,12 +528,13 @@ def DumpConfigToLog():
             Domoticz.Debug("{}:\t{}".format(x, value))
     Domoticz.Debug("Device count: " + str(len(Devices)))
     for x in Devices:
-        Domoticz.Debug("Device:           " + str(x) + " - " + str(Devices[x]))
-        Domoticz.Debug("Device ID:       '" + str(Devices[x].ID) + "'")
-        Domoticz.Debug("Device Name:     '" + Devices[x].Name + "'")
-        Domoticz.Debug("Device nValue:    " + str(Devices[x].nValue))
-        Domoticz.Debug("Device sValue:   '" + Devices[x].sValue + "'")
-        Domoticz.Debug("Device LastLevel: " + str(Devices[x].LastLevel))
+        Domoticz.Debug("Device:           {} - {}".format(x, str(Devices[x])))
+        Domoticz.Debug("Device ID:       '{}'".format(Devices[x].ID))
+        Domoticz.Debug("Device Name:     '{}'".format(Devices[x].Name))
+        if hasattr(Devices[x], 'nValue'):
+            Domoticz.Debug("Device nValue:    {}".format(Devices[x].nValue))
+        Domoticz.Debug("Device sValue:   '{}'".format(Devices[x].sValue))
+        Domoticz.Debug("Device LastLevel: {}".format(Devices[x].LastLevel))
     return
 
 
@@ -681,3 +712,4 @@ def updateImageByUnit(Unit: int, picture):
         for image in Images:
             Domoticz.Error("Image: {} id: {} name: {}".format(image, Images[image].ID, Images[image].Name))
     return
+

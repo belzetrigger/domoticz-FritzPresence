@@ -1,21 +1,27 @@
 import unittest
+import logging
 
 from fritzhelper.fritzHelper import FritzHelper
 
-# from fritzconnection.lib.fritzhosts import FritzHosts
-# from fritzconnection.lib.fritzstatus import FritzStatus
-
 import configparser
+import sys
+import codecs
+
 
 CONFIG_SECTION = "fritzbox"
+# set up logger
+logger = logging.getLogger()
+logger.level = logging.DEBUG
 
 
 class Test_fritzHelper(unittest.TestCase):
     def setUp(self):
-
+        self.stream_handler = logging.StreamHandler(sys.stdout)
+        logger.addHandler(self.stream_handler)
+        logging.getLogger().info("# set up test for fritz helper")
         config = configparser.ConfigParser()
-        config.read_file(open(r"./test/my_config.ini"))
-        # config.read('my_config.ini')
+        #config.read_file(open(r"./test/my_config.ini"))
+        config.read_file(codecs.open(r"./test/my_config.ini", encoding="utf-8"))
         self.assertTrue(
             config.has_section(CONFIG_SECTION),
             "we need this config to connect to fritzBox",
@@ -47,6 +53,8 @@ class Test_fritzHelper(unittest.TestCase):
     def tearDown(self):
         self.fh.reset()
         self.fh = None
+        # remove logger
+        logger.removeHandler(self.stream_handler)
 
     def test_init(self):
         self.fh.dumpConfig()
@@ -146,8 +154,9 @@ class Test_fritzHelper(unittest.TestCase):
         self.test_initIps()
         self.fh.addDeviceByMac(self.macEtherActive)
         # default is using mac address, before getting real name from box
+        #TODO FIXME, 
         self.assertEquals(
-            self.fh.getDeviceName(self.macEtherActive), self.macEtherActive
+            self.fh.getDeviceName(self.macEtherActive),self.macEtherActive
         )
 
         # macs to devices

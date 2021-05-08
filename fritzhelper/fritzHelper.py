@@ -1,7 +1,10 @@
 # this is our helper class to do the work with FritzConnection
 
+import plugin
+from blz.blzHelperInterface import BlzHelperInterface
+
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, overload
 from typing import Any, Dict
 import sys
 
@@ -15,7 +18,7 @@ import sys
 try:
     import Domoticz
 except ImportError:
-    from . import fakeDomoticz as Domoticz
+    from blz import fakeDomoticz as Domoticz
 
 # try:
 from fritzconnection.lib.fritzhosts import FritzHosts
@@ -49,7 +52,7 @@ class PresDevice:
         self.hasError = False
         self.needUpdate = False
 
-    def setMyError(self, error):
+    def setError(self, error):
         self.hasError = True
         self.errorMsg = error
 
@@ -162,7 +165,7 @@ class PresDevice:
                     self.lastUpdate = datetime.now()
 
         except (Exception) as e:
-            self.setMyError(e)
+            self.setError(e)
             Domoticz.Error(
                 "Error on readStatus for Device: {} ({}) msg: '{}'; hasError:{}".format(
                     self.deviceName, self.macAddress, e, str(self.hasError)
@@ -177,8 +180,7 @@ class PresDevice:
         s = "{} ip: {}".format(self.getShortSummary(), self.deviceIp)
         return s
 
-
-class FritzHelper:
+class FritzHelper(BlzHelperInterface):
     """helper class to manage communication with fritz box via fritz connection
 
     Raises:
@@ -216,14 +218,16 @@ class FritzHelper:
         # self.devices = {}  # type: Dict[str, PresDevice]
         self.devices: Dict[str, PresDevice] = {}
         for i in range(len(macAddresses)):
+            
             adr = macAddresses[i]
-            if not adr:
+            if not plugin.isValidMAC(adr):
                 Domoticz.Error("found empty mac in list, skip it")
                 continue
-            n = None
-            if defaultNames is not None and defaultNames[i] is not None:
-                n = defaultNames[i]
-            self.devices.update({adr: PresDevice(adr, n, cooldownperiod)})
+            # n = None
+            #no default names
+            #if defaultNames is not None and defaultNames[i] is not None:
+            #    n = defaultNames[i]
+            self.devices.update({adr: PresDevice(macAddress=adr)})
 
         self.cooldownperiod = cooldownperiod
         self.debug = False
@@ -255,6 +259,11 @@ class FritzHelper:
             Domoticz.Error("Given index '{}' not valid.".format(mac))
             raise Exception("Index '{}' is not valid".format(mac))
 
+    
+    def needsUpdate(self):
+        Domoticz.Log("This is a multi device plugin - so please use needsUpdate(self, devId)")
+        pass
+    
     def needsUpdate(self, mac: str):
         """checks if device has changed and so needs an update
         Arguments:
@@ -278,6 +287,8 @@ class FritzHelper:
             value.reset()
         self.resetError()
 
+    
+
     def connect(self):
         """init a fritzconnection
 
@@ -290,13 +301,19 @@ class FritzHelper:
         )
         return self.fcHosts
 
-    def setMyError(self, error):
+    def setError(self, error):
         self.hasError = True
         self.errorMsg = error
 
     def resetError(self):
         self.hasError = False
         self.errorMsg = None
+    
+    def hasErrorX(self):
+        return self.hasError
+
+    def getErrorMsg(self):
+        return self.errorMsg
 
     def addDevice(self, host):
         Domoticz.Debug("addDevice")
@@ -317,8 +334,8 @@ class FritzHelper:
         Keyword Arguments:
             name {str} -- name to use for this device (default: {""})
         """
-        Domoticz.Debug("addDeviceByMac")
-        mac = mac
+        Domoticz.Debug("addDeviceByMac {}".format(mac))
+        #mac = mac
         if not name:
             name = mac
         if mac in self.devices:
@@ -391,7 +408,7 @@ class FritzHelper:
 
             return devices
         except (Exception) as e:
-            self.setMyError(e)
+            self.setError(e)
             Domoticz.Error(
                 "Error on getAllHosts: msg '{}'; hasError:{}".format(
                     e, str(self.hasError)
@@ -415,7 +432,7 @@ class FritzHelper:
                 fh._action("X_AVM-DE_WakeOnLANByMACAddress", NewMACAddress=macAddress)
 
         except (Exception) as e:
-            self.setMyError(e)
+            self.setError(e)
             Domoticz.Error(
                 "Error on wakeOnLan: msg '{}'; hasError:{}".format(
                     e, str(self.hasError)
@@ -436,7 +453,7 @@ class FritzHelper:
                 value.readStatus(fh)
 
         except (Exception) as e:
-            self.setMyError(e)
+            self.setError(e)
             Domoticz.Error(
                 "Error on readStatus: msg '{}'; hasError:{}".format(
                     e, str(self.hasError)
@@ -454,6 +471,7 @@ class FritzHelper:
                 t = d.deviceIsConnected
         return t
 
+    
     def getDeviceName(self, mac: str):
         """device name or default name if null/none
 
@@ -490,12 +508,31 @@ class FritzHelper:
             s += value.getShortSummary(seperator) + " "
         return s
 
-    def getSummary(self):
+    def getSummary(self,  seperator: str = "\t"):
         s = ""
         for value in self.devices.values():
-            s += value.getShortSummary() + " "
+            s += value.getShortSummary(seperator) + " "
         return s
 
     def dumpStatus(self):
         s = self.getSummary()
         Domoticz.Log(s)
+
+    # TODO check for unused fx
+
+    def reinitData():
+        Domoticz.Log("Not jet implemented")
+        pass
+
+    def getAlarmLevel(self):
+        Domoticz.Log("Not jet implemented")
+        pass
+
+    def getAlarmText(self):
+        Domoticz.Log("Not jet implemented")
+        pass
+
+    #def getDeviceName(self):
+    #    Domoticz.Log("Not jet implemented")
+    #    pass
+
