@@ -10,11 +10,9 @@
 
 Primary a Presence Detector that works with your [Fritz!Box](https://en.avm.de/, 'Fritz!Box are quite famous router from avm'). And also lets you add easily other known hosts from your Box to Domoticz.
 
-
-
-::: warning
-***Attention: With Version 0.7.0 Parameter have changed. So adapt user and password if updating from <0.7.0!***
-:::
+```{admonition} Hint
+Attention: With Version 0.7.0 Parameter have changed. So adapt user and password if updating from <0.7.0!
+```
 
 | Device     | Image                                                                                                                                                                                                                                                                                      | Comment                                                                                                                    |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
