@@ -133,9 +133,10 @@ Under development but main function runs quite stabile.
 
 ## Developing
 Based on https://github.com/ffes/domoticz-buienradar/ there are
- -  `fakeDomoticz.py` - used to run it outside of Domoticz
- -  inside folder `test` are small unittest cases
- -  before you can run them, copy `sample_config.ini` to `my_config.ini` and adapt values
+- `/blz/fakeDomoticz.py` - used to run it outside of Domoticz
+- `/blz/blzHelperInterface.py` starting point for some more structure
+- unittest under folder `/test`  - it's the new entry point for tests
+  - copy `sample_config.ini`  to `my_config.ini` and adapt to your liking  
 
 
 
