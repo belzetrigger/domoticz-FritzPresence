@@ -1,6 +1,6 @@
 # this is our helper class to do the work with FritzConnection
 
-import plugin
+from blz import blzHelperInterface
 from blz.blzHelperInterface import BlzHelperInterface
 
 from datetime import datetime, timedelta
@@ -220,7 +220,7 @@ class FritzHelper(BlzHelperInterface):
         for i in range(len(macAddresses)):
             
             adr = macAddresses[i]
-            if not plugin.isValidMAC(adr):
+            if not blzHelperInterface.isValidMAC(adr):
                 Domoticz.Error("found empty mac in list, skip it")
                 continue
             # n = None

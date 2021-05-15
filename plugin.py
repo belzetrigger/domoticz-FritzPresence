@@ -2,8 +2,6 @@
 #
 # Author: belze
 #
-from blz import blzHelperInterface
-import re
 
 
 """
@@ -77,11 +75,13 @@ import re
                 <option label="False" value="Normal"  default="False" />
             </options>
         </param>
-        <param field="Port" label="domoticz port" width="75px" required="true" default="8080"/>
         
     </params>
 </plugin>
 """
+from blz import blzHelperInterface
+import re
+
 #BLZ 2021-04-21: new lib for renamin work around via JSON-API
 import urllib
 # import datetime as dt
