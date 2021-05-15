@@ -482,10 +482,14 @@ class FritzHelper(BlzHelperInterface):
             [str]: device name or default name if null/none
         """
         s = ""
-        if self.validateDeviceIndex(mac):
-            d = self.devices.get(mac)
-            if d:
-                s = d.getDeviceName()
+        try:
+            if self.validateDeviceIndex(mac):
+                d = self.devices.get(mac)
+                if d:
+                    s = d.getDeviceName()
+        except Exception as e:
+            Domoticz.Error("error on get name for device with id: '{}' > {}".format(mac,e)) 
+        
         return s
     
     def getDeviceIP(self, mac: str):
