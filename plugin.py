@@ -561,6 +561,7 @@ def getUnit4DeviceID(devId: str):
     for dev in Devices:
         if (Devices[dev].DeviceID == devId):
             return dev
+    Domoticz.Debug("getUnit4DeviceID: mac: {} not found in domoticz device list".format(devId))
 
 
 def getUnit4Name(name: str):
@@ -605,25 +606,33 @@ def createDevice(unit: int, devName: str, devId: str, image: str = ICON_PERSON):
     if devId is not None:
         idx = getUnit4DeviceID(devId)
         if(idx is not None):
-            Domoticz.Debug("BLZ: Looks like device with id: {} was created under unit: {}".format(devId,
+            Domoticz.Debug("BLZ:createDevice: Looks like device with id: {} was created under unit: {}".format(devId,
                                                                                                   idx))
             if(idx != unit):
-                Domoticz.Log("BLZ: Device with id: {} was created under unit: {} and not {}".format(devId,
+                Domoticz.Log("BLZ:createDevice: Device with id: {} was created under unit: {} and not {}".format(devId,
                                                                                                     idx, unit))
             return idx
-    Domoticz.Debug("Device does not exist - create it ...")
-    if unit not in Devices:
-        if unit is None:
-            unit = len(Devices) + 1
+    Domoticz.Debug("BLZ:createDevice: Device does not exist - create it ...")
+    if unit is None:
+        Domoticz.Debug("BLZ:createDevice: Given Unit was NONE, so just take next available")
+        unit = len(Devices) + 1
+    if unit in Devices:
+        Domoticz.Debug("BLZ:createDevice: Looks like unit {} is already used by {}. Take next".format(unit, Devices[unit].Name) )
+        unit = len(Devices) + 1
 
+    if unit not in Devices:
         Domoticz.Device(Name=devName, Unit=unit, TypeName="Switch",
                         DeviceID=devId,
                         Options={"Custom": ("1;Foo")}, Used=1).Create()
         # work around, default behavior is using Hardwarename+' '+devname
         # Devices[unit].Update(Name=devName)
         updateImageByUnit(unit, image)
-        Domoticz.Log("BLZ: Device {} created".format(
-            unit))
+        Domoticz.Log("BLZ:createDevice: Device  unit={} id={} created".format(
+            unit, devId))
+    else:
+        Domoticz.Error("BLZ:createDevice: Should never happen, as we double checked before.... But looks like unit {} is already used by {}.".format(unit, Devices[unit].Name) )
+        
+        
     return unit
 
 

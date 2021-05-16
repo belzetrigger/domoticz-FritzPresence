@@ -196,12 +196,17 @@ class Test_fritzHelper(unittest.TestCase):
         """
         tests for buggy data
         """
-        # pass method and arguments separately ...
-        self.assertRaises(Exception, self.fh.validateDeviceIndex, self.macDummyOutside)
+        # add at least one entry - for more reality and a positive check
+        self.fh.addDeviceByMac(self.macEtherActive)
+        self.assertTrue(self.fh.isDeviceIndexValid( self.macEtherActive))
 
-        # self.fh.addDeviceByMac(self.macDummyUnknown)
-        # self.fh.isDeviceConnected(self.macDummyUnknown)
+        # new function without excpetion
+        self.assertFalse(self.fh.isDeviceIndexValid( self.macDummyOutside))
 
+         # pass method and arguments separately ...
+        with self.assertRaises(ValueError):
+            self.fh.validateDeviceIndex( self.macDummyOutside)
+        
 
 # fh.isDeviceConnected(mac)
 # fh.getDeviceName()

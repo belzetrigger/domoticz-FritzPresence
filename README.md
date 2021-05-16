@@ -109,7 +109,7 @@ Keep in mind, normally a device must have been recent active to have a connectio
 To send magic packet just click on an `off` device to switch it on. WOL works only for ethernet. And the hardware must support it! For example the network adapter on Raspberry Pi 3 does not support it.
 
 ## Bugs and ToDos
-- integrate a threshold, when it is more stressless for router to get full device list and parse this, instead of getting 20 devices/host information
+- integrate a threshold, when it is more stress-less for router to get full device list and parse this, instead of getting 20 devices/host information
 - at the moment support for python plugin rename a device is quite bad, so we use JSON-API call 
 - On windows system changing icons for sensors did not work, so it's standard switch icon.
 - On windows system "update" the hardware breaks imported python libs. Plugin can not get data from FritzBox. But after restart services it works fine.                                                                  
@@ -117,7 +117,7 @@ To send magic packet just click on an `off` device to switch it on. WOL works on
 ## Versions
 | Version | Note                                                                                     |
 | ------- | ---------------------------------------------------------------------------------------- |
-| 0.7.0   | * change handling in case of MAC-List usage. Device names are fetched from Fritz!Box and updated on Heartbeat  <br>* Using domoticz special Parameter User/Password - so please reinsert.<br> * avoid overwritting custom images with default icons during start up<br> * better checking if inserted values are MAC-Addresses                                        |
+| 0.7.0   | * change handling in case of MAC-List usage. Device names are fetched from Fritz!Box and updated on Heartbeat  <br>* Using domoticz special Parameter User/Password - so please reinsert.<br> * avoid overwriting custom images with default icons during start up<br> * better checking if inserted values are MAC-Addresses                                        |
 | 0.6.4   | small stability fixes, a bit restructure and tested with new version of lib <br>for issue#2, avoid resetting images on startup also if MAC-List is used, so custom symbols will be kept   |
 | 0.6.3   | button to add/remove know hosts from Fritz!Box to Domoticz and support for "Wake on LAN" |
 | 0.6.2   | supports ';' separated list of MAC and names                                             |

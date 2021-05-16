@@ -27,39 +27,52 @@ class X:
     Unit:str = None
     DeviceID = None
     sValue:str =  None
-    descr :str = None
+    Description :str = None
     level :int = None
     nValue: int = None
     LastLevel: int = None
-    def __init__(self, aID:str) -> None:
+    Image:str = None
+    def __init__(self, aID:str, Name:str=Name,DeviceID:str =None,Image:str=None) -> None:
         self.ID = aID
-        self.Name = aID
+        if(Name):
+            self.Name = Name
+        else:
+            self.Name = aID
         self.Unit = aID
-        self.DeviceID = aID
-        self.Value = aID
+        if(DeviceID):
+            self.DeviceID = DeviceID
+        else:
+            self.DeviceID = aID    
+        self.sValue = aID
+        self.nValue = None
+        self.Image = Image
         pass
     
     def Create(self):
         pass
 
 
-    def Update(self, alarmLevel:int, Name:str=None,alarmData:str=None, descr:str=None):
-        self.level = alarmLevel
+    def Update(self, nValue:str,  sValue:str=None, Name:str=None,alarmData:str=None, Description:str=None,  Image=None):
+        #self.level = alarmLevel
         self.Name = Name
-        self.descr =descr
+        self.Description =Description
+        self.nValue=nValue
+        self.sValue=sValue
+        self.Image = Image
         pass
 
 def Image(sZip:str):
     Debug("create image: "+sZip)
     img = X(sZip)
-    Images[str] = img
+    id = sZip.replace(".zip","")
+    Images[id] = img
     return img
 
 
 def Device(Name:str, Unit:str, TypeName:str,
                         Used:bool=1,
-                        Switchtype:int=18, Options:str=None):
-    x = X(Unit)
+                        Switchtype:int=18, DeviceID:str=None,Options:str=None):
+    x = X(Unit, Name=Name, DeviceID=DeviceID )
     Devices[Unit] = x
     return x
 

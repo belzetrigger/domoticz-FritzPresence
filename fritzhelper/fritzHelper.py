@@ -256,10 +256,25 @@ class FritzHelper(BlzHelperInterface):
         if mac in self.devices:
             return True
         else:
-            Domoticz.Error("Given index '{}' not valid.".format(mac))
-            raise Exception("Index '{}' is not valid".format(mac))
+            Domoticz.Error("Given index '{}' not valid. Means Helper does not know it.".format(mac))
+            raise ValueError("Index '{}' is not valid. Means Helper does not know it.".format(mac))
 
     
+    def isDeviceIndexValid(self, mac :str) -> bool:
+        """checks index for a device, Exception free function
+
+        Arguments:
+            mac {str} -- mac address of device in list
+
+       
+        Returns:
+            [type] -- true if index is okay
+        """    
+        
+        exists:bool= mac in self.devices
+        Domoticz.Debug("isDeviceIndexValid for Helper: MAC:{} result => {}".format(mac, exists) )
+        return exists
+        
     def needsUpdate(self):
         Domoticz.Log("This is a multi device plugin - so please use needsUpdate(self, devId)")
         pass
@@ -272,7 +287,7 @@ class FritzHelper(BlzHelperInterface):
             boolean -- if True -> please update the device in domoticz
         """
         update = False
-        if self.validateDeviceIndex(mac):
+        if self.isDeviceIndexValid(mac):
             d = self.devices.get(mac)
             if d:
                 update = d.needUpdate
@@ -482,13 +497,13 @@ class FritzHelper(BlzHelperInterface):
             [str]: device name or default name if null/none
         """
         s = ""
-        try:
-            if self.validateDeviceIndex(mac):
-                d = self.devices.get(mac)
-                if d:
-                    s = d.getDeviceName()
-        except Exception as e:
-            Domoticz.Error("error on get name for device with id: '{}' > {}".format(mac,e)) 
+        if self.isDeviceIndexValid(mac):
+            d = self.devices.get(mac)
+            if d:
+                s = d.getDeviceName()
+        else:
+            Domoticz.Error("error on get name for device with id: '{}' > {}".format(mac)) 
+            s=mac+(" NOT FOUND! See Log.")
         
         return s
     
